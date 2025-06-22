@@ -14,6 +14,16 @@ st.set_page_config(
 def main():
     st.markdown("# 🔐 Authentication")
     
+    # Initialize session state variables
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+    if 'current_user' not in st.session_state:
+        st.session_state.current_user = None
+    if 'food_items' not in st.session_state:
+        st.session_state.food_items = []
+    if 'money_saved' not in st.session_state:
+        st.session_state.money_saved = 0.0
+    
     # Create tabs for different auth methods
     tab1, tab2, tab3 = st.tabs(["🔑 Login", "📝 Sign Up", "🔄 Reset Password"])
     
