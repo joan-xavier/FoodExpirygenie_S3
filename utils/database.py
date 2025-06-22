@@ -148,7 +148,7 @@ def add_food_item(user_email, name, category, purchase_date, expiry_date, quanti
             return True
             
     except Exception as e:
-        st.error(f"Error adding food item: {str(e)}")
+        print(f"Database error adding food item: {str(e)}")  # Debug logging
         conn.rollback()
         return False
     finally:

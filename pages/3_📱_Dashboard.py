@@ -325,69 +325,166 @@ def validate_uploaded_image(image_file):
         return False
 
 def display_extracted_items(extracted_items, source_type):
+    """Display extracted items for confirmation and editing"""
     if extracted_items:
-        st.success(f"✅ Found {len(extracted_items)} items!")
+        st.success(f"Found {len(extracted_items)} items from {source_type}")
         
-        # Display items for confirmation
-        st.markdown(f"#### 🔍 Confirm Extracted Items from {source_type.title()}:")
+        # Store items in session state to prevent loss on rerun
+        session_key = f"extracted_items_{source_type}"
+        if session_key not in st.session_state:
+            st.session_state[session_key] = extracted_items.copy()
         
+        current_items = st.session_state[session_key]
         confirmed_items = []
-        for i, item in enumerate(extracted_items):
+        
+        st.markdown("### Review and Edit Items Before Adding:")
+        
+        for i, item in enumerate(current_items):
+            item_key = f"{source_type}_{i}_{item.get('name', 'item')}"
+            
             with st.expander(f"📦 {item.get('name', 'Unknown Item')}", expanded=True):
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
                 
                 with col1:
-                    name = st.text_input("Name", value=item.get('name', ''), key=f"{source_type}_name_{i}")
-                    category = st.selectbox("Category", get_food_categories(),
-                                          index=get_food_categories().index(item.get('category', 'Grocery')),
-                                          key=f"{source_type}_cat_{i}")
+                    name = st.text_input("Food Name", 
+                                       value=item.get('name', ''), 
+                                       key=f"{item_key}_name")
+                    category = st.selectbox("Category", 
+                                          get_food_categories(),
+                                          index=get_food_categories().index(item.get('category', 'Grocery')) if item.get('category') in get_food_categories() else 0,
+                                          key=f"{item_key}_cat")
                 
                 with col2:
                     purchase_date = st.date_input("Purchase Date",
                                                 value=datetime.strptime(item.get('purchase_date', datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
-                                                key=f"{source_type}_pdate_{i}")
-                    quantity = st.text_input("Quantity", value=item.get('quantity', '1 unit'), key=f"{source_type}_qty_{i}")
+                                                key=f"{item_key}_pdate")
+                    quantity = st.text_input("Quantity", 
+                                           value=item.get('quantity', '1 unit'), 
+                                           key=f"{item_key}_qty")
                 
                 with col3:
                     expiry_date = st.date_input("Expiry Date",
                                               value=datetime.strptime(item.get('expiry_date', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
-                                              key=f"{source_type}_edate_{i}")
-                    include = st.checkbox("Include this item", value=True, key=f"{source_type}_include_{i}")
+                                              key=f"{item_key}_edate")
+                    opened = st.checkbox("Already opened", 
+                                       value=item.get('opened', False),
+                                       key=f"{item_key}_opened")
                 
-                if include:
+                with col4:
+                    include = st.checkbox("Include", 
+                                        value=True, 
+                                        key=f"{item_key}_include")
+                    if st.button("Remove", key=f"{item_key}_remove"):
+                        st.session_state[session_key].pop(i)
+                        st.rerun()
+                
+                if include and name.strip():
                     confirmed_items.append({
-                        'name': name,
+                        'name': name.strip(),
                         'category': category,
                         'purchase_date': purchase_date.strftime('%Y-%m-%d'),
                         'expiry_date': expiry_date.strftime('%Y-%m-%d'),
-                        'quantity': quantity,
-                        'opened': False,
-                        'added_method': source_type,
-                        'id': len(st.session_state.food_items) + len(confirmed_items)
+                        'quantity': quantity.strip(),
+                        'opened': opened,
+                        'added_method': source_type
                     })
         
-        if st.button(f"✅ Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
+        if confirmed_items and st.button(f"Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
             success_count = 0
+            failed_items = []
+            
             for item in confirmed_items:
-                success = add_food_item(
-                    user_email=st.session_state.current_user,
-                    name=item['name'],
-                    category=item['category'],
-                    purchase_date=item['purchase_date'],
-                    expiry_date=item['expiry_date'],
-                    quantity=item['quantity'],
-                    opened=item['opened'],
-                    added_method=item['added_method']
-                )
-                if success:
-                    success_count += 1
+                try:
+                    # Convert string dates to date objects
+                    purchase_date_obj = datetime.strptime(item['purchase_date'], '%Y-%m-%d').date()
+                    expiry_date_obj = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+                    
+                    success = add_food_item(
+                        user_email=st.session_state.current_user,
+                        name=item['name'],
+                        category=item['category'],
+                        purchase_date=purchase_date_obj,
+                        expiry_date=expiry_date_obj,
+                        quantity=item['quantity'],
+                        opened=item['opened'],
+                        added_method=item['added_method']
+                    )
+                    
+                    if success:
+                        success_count += 1
+                    else:
+                        failed_items.append(item['name'])
+                        
+                except Exception as e:
+                    st.error(f"Error adding {item['name']}: {str(e)}")
+                    failed_items.append(item['name'])
             
             if success_count > 0:
-                st.success(f"🎉 Added {success_count} items to your inventory!")
+                st.success(f"Successfully added {success_count} items to your inventory!")
                 refresh_food_items()
+                
+                # Clear session state after successful addition
+                if session_key in st.session_state:
+                    del st.session_state[session_key]
+                    
                 st.rerun()
-            else:
-                st.error("❌ Failed to add items")
+            
+            if failed_items:
+                st.error(f"Failed to add: {', '.join(failed_items)}")
+        
+        if not confirmed_items:
+            st.warning("No items selected for addition. Please check at least one item.")
+            
+    else:
+        st.warning("No items found. Try a clearer image or different angle.")
+        
+        if st.button(f"✅ Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
+            if not confirmed_items:
+                st.warning("No items selected for addition")
+                return
+                
+            success_count = 0
+            failed_items = []
+            
+            for item in confirmed_items:
+                try:
+                    # Convert string dates to date objects
+                    purchase_date_obj = datetime.strptime(item['purchase_date'], '%Y-%m-%d').date()
+                    expiry_date_obj = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+                    
+                    success = add_food_item(
+                        user_email=st.session_state.current_user,
+                        name=item['name'],
+                        category=item['category'],
+                        purchase_date=purchase_date_obj,
+                        expiry_date=expiry_date_obj,
+                        quantity=item['quantity'],
+                        opened=item['opened'],
+                        added_method=item['added_method']
+                    )
+                    
+                    if success:
+                        success_count += 1
+                    else:
+                        failed_items.append(item['name'])
+                        
+                except Exception as e:
+                    st.error(f"Error adding {item['name']}: {str(e)}")
+                    failed_items.append(item['name'])
+            
+            if success_count > 0:
+                st.success(f"Successfully added {success_count} items to your inventory!")
+                refresh_food_items()
+                
+                # Clear session state after successful addition
+                session_key = f"extracted_items_{source_type}"
+                if session_key in st.session_state:
+                    del st.session_state[session_key]
+                    
+                st.rerun()
+            
+            if failed_items:
+                st.error(f"Failed to add: {', '.join(failed_items)}")
     else:
         st.warning("⚠️ No items found. Try a clearer image or different angle.")
 
