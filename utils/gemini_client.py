@@ -58,6 +58,9 @@ def process_image_input(image_file, image_type):
     """Process image input using Gemini AI to extract food items"""
     
     try:
+        # Reset file pointer to beginning
+        image_file.seek(0)
+        
         # Convert uploaded file to bytes
         image_bytes = image_file.read()
         
@@ -110,12 +113,19 @@ def process_image_input(image_file, image_type):
             Current date: {current_date}
             """.format(current_date=datetime.now().strftime('%Y-%m-%d'))
         
+        # Determine MIME type based on file content
+        mime_type = "image/jpeg"
+        if image_file.type:
+            mime_type = image_file.type
+        elif image_bytes[:4] == b'\x89PNG':
+            mime_type = "image/png"
+        
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
                 types.Part.from_bytes(
                     data=image_bytes,
-                    mime_type="image/jpeg"
+                    mime_type=mime_type
                 ),
                 prompt
             ],

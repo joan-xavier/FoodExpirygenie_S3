@@ -31,23 +31,21 @@ def main():
         ["📝 Manual Entry", "🎤 Voice Input", "📸 Image/OCR Scan"]
     )
     
-    # Main content area
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        if input_method == "📝 Manual Entry":
-            manual_entry_section()
-        elif input_method == "🎤 Voice Input":
-            voice_input_section()
-        elif input_method == "📸 Image/OCR Scan":
-            image_input_section()
-    
-    with col2:
-        quick_stats_section()
+    # Main content area - full width for input methods
+    if input_method == "📝 Manual Entry":
+        manual_entry_section()
+    elif input_method == "🎤 Voice Input":
+        voice_input_section()
+    elif input_method == "📸 Image/OCR Scan":
+        image_input_section()
     
     # Display current food items
     st.markdown("---")
     display_food_items()
+    
+    # Quick stats section moved below
+    st.markdown("---")
+    quick_stats_section()
 
 def manual_entry_section():
     st.markdown("### 📝 Manual Food Entry")
@@ -99,33 +97,26 @@ def voice_input_section():
     st.markdown("### 🎤 Voice Input")
     st.info("💡 Try saying: 'I bought chicken, milk, and bananas today' or 'Add 2 pounds of ground beef expiring next Friday'")
     
-    col1, col2 = st.columns([3, 1])
+    # Voice input text area
+    voice_text = st.text_area(
+        "🗣️ Voice Input (or type here)",
+        placeholder="Speak or type what you bought...",
+        help="You can either use voice input or type your food items here",
+        height=100
+    )
+    
+    col1, col2 = st.columns(2)
     
     with col1:
-        voice_text = st.text_area(
-            "🗣️ Voice Input (or type here)",
-            placeholder="Speak or type what you bought...",
-            help="You can either use voice input or type your food items here"
-        )
+        if st.button("🎙️ Start Voice Recording", use_container_width=True):
+            st.info("🎤 Voice recording feature simulated - please type in the text area above")
     
     with col2:
-        st.markdown("#### 🎙️ Voice Controls")
-        if st.button("🔴 Start Recording", use_container_width=True):
-            try:
-                # This would be the voice recording functionality
-                voice_result = voice_to_text()
-                if voice_result:
-                    voice_text = voice_result
-                    st.rerun()
-            except Exception as e:
-                st.error(f"❌ Voice recording failed: {str(e)}")
-        
-        if st.button("⏹️ Stop & Process", use_container_width=True):
-            if voice_text:
+        if st.button("🔄 Process Voice Input", type="primary", use_container_width=True):
+            if voice_text.strip():
                 process_voice_text(voice_text)
-    
-    if voice_text and st.button("🔄 Process Voice Input", type="primary"):
-        process_voice_text(voice_text)
+            else:
+                st.warning("Please enter some text first")
 
 def process_voice_text(voice_text):
     with st.spinner("🤖 Processing your voice input with AI..."):
@@ -194,66 +185,122 @@ def image_input_section():
         receipt_image = st.file_uploader(
             "Choose receipt image...",
             type=['png', 'jpg', 'jpeg'],
-            help="Upload a clear image of your grocery receipt"
+            help="Upload a clear image of your grocery receipt",
+            key="receipt_uploader"
         )
         
         if receipt_image is not None:
-            st.image(receipt_image, caption="Uploaded Receipt", use_container_width=True)
-            
-            if st.button("🔍 Extract Items from Receipt", type="primary"):
-                process_receipt_image(receipt_image)
+            try:
+                st.image(receipt_image, caption="Uploaded Receipt", use_container_width=True)
+                
+                if st.button("🔍 Extract Items from Receipt", type="primary", key="process_receipt"):
+                    process_receipt_image(receipt_image)
+            except Exception as e:
+                st.error(f"Error displaying image: {str(e)}")
     
     with tab2:
         st.markdown("#### 📊 Barcode Scanning")
         barcode_image = st.file_uploader(
             "Choose barcode image...",
             type=['png', 'jpg', 'jpeg'],
-            help="Upload an image of the product barcode"
+            help="Upload an image of the product barcode",
+            key="barcode_uploader"
         )
         
         if barcode_image is not None:
-            st.image(barcode_image, caption="Uploaded Barcode", use_container_width=True)
-            
-            if st.button("🔍 Scan Barcode", type="primary"):
-                process_barcode_image(barcode_image)
+            try:
+                st.image(barcode_image, caption="Uploaded Barcode", use_container_width=True)
+                
+                if st.button("🔍 Scan Barcode", type="primary", key="process_barcode"):
+                    process_barcode_image(barcode_image)
+            except Exception as e:
+                st.error(f"Error displaying image: {str(e)}")
     
     with tab3:
         st.markdown("#### 🍎 Food Photo Recognition")
         food_image = st.file_uploader(
             "Choose food image...",
             type=['png', 'jpg', 'jpeg'],
-            help="Upload a photo of your food items"
+            help="Upload a photo of your food items",
+            key="food_uploader"
         )
         
         if food_image is not None:
-            st.image(food_image, caption="Uploaded Food Photo", use_container_width=True)
-            
-            if st.button("🔍 Identify Food Items", type="primary"):
-                process_food_photo(food_image)
+            try:
+                st.image(food_image, caption="Uploaded Food Photo", use_container_width=True)
+                
+                if st.button("🔍 Identify Food Items", type="primary", key="process_food"):
+                    process_food_photo(food_image)
+            except Exception as e:
+                st.error(f"Error displaying image: {str(e)}")
 
 def process_receipt_image(image):
     with st.spinner("🤖 Extracting items from receipt..."):
         try:
+            # Validate image first
+            if not validate_uploaded_image(image):
+                return
+            
             extracted_items = process_image_input(image, "receipt")
-            display_extracted_items(extracted_items, "receipt")
+            if extracted_items:
+                display_extracted_items(extracted_items, "receipt")
+            else:
+                st.warning("No food items found in the receipt. Try a clearer image or different angle.")
         except Exception as e:
             st.error(f"❌ Error processing receipt: {str(e)}")
+            st.info("💡 Try uploading a clearer image with better lighting")
 
 def process_barcode_image(image):
     with st.spinner("🤖 Scanning barcode..."):
         try:
+            # Validate image first
+            if not validate_uploaded_image(image):
+                return
+                
             extracted_items = process_image_input(image, "barcode")
-            display_extracted_items(extracted_items, "barcode")
+            if extracted_items:
+                display_extracted_items(extracted_items, "barcode")
+            else:
+                st.warning("Could not read barcode. Ensure the barcode is clear and fully visible.")
         except Exception as e:
             st.error(f"❌ Error scanning barcode: {str(e)}")
+            st.info("💡 Make sure the entire barcode is visible and in focus")
 
 def process_food_photo(image):
     with st.spinner("🤖 Identifying food items..."):
         try:
+            # Validate image first
+            if not validate_uploaded_image(image):
+                return
+                
             extracted_items = process_image_input(image, "food_photo")
-            display_extracted_items(extracted_items, "food_photo")
+            if extracted_items:
+                display_extracted_items(extracted_items, "food_photo")
+            else:
+                st.warning("No food items detected in the image. Try a clearer photo with better lighting.")
         except Exception as e:
             st.error(f"❌ Error identifying food items: {str(e)}")
+            st.info("💡 Ensure food items are clearly visible and well-lit")
+
+def validate_uploaded_image(image_file):
+    """Validate uploaded image file"""
+    try:
+        if image_file is None:
+            st.error("No image file provided")
+            return False
+            
+        # Check file size (limit to 10MB)
+        if hasattr(image_file, 'size') and image_file.size > 10 * 1024 * 1024:
+            st.error("Image file too large. Please use files smaller than 10MB.")
+            return False
+        
+        # Reset file pointer to beginning
+        image_file.seek(0)
+        return True
+        
+    except Exception as e:
+        st.error(f"Error validating image: {str(e)}")
+        return False
 
 def display_extracted_items(extracted_items, source_type):
     if extracted_items:
@@ -380,14 +427,24 @@ def display_food_items():
     
     df['Status'] = df['expiry_date'].apply(get_status)
     
-    # Sorting options
-    col1, col2, col3 = st.columns(3)
+    # Top controls row
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         sort_by = st.selectbox("Sort by:", ["expiry_date", "name", "category", "purchase_date"])
     with col2:
         sort_order = st.selectbox("Order:", ["Ascending", "Descending"])
     with col3:
         filter_status = st.selectbox("Filter by status:", ["All", "🟢 Safe", "🟡 Expiring Soon", "🔴 Expired"])
+    with col4:
+        # CSV Download button
+        if st.button("📥 Download CSV", type="primary"):
+            csv_data = df.to_csv(index=False)
+            st.download_button(
+                label="⬇️ Download Food Inventory",
+                data=csv_data,
+                file_name=f"food_inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
     
     # Apply filters
     if filter_status != "All":
