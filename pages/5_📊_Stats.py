@@ -23,6 +23,17 @@ def main():
     st.markdown("# 📊 ExpiryGenie Statistics")
     st.markdown(f"### Data insights for **{st.session_state.current_user}**")
     
+    # Sidebar navigation
+    with st.sidebar:
+        st.markdown("## 🧞‍♂️ ExpiryGenie")
+        if st.button("🏠 Home", use_container_width=True):
+            st.switch_page("pages/1_🏠_Landing.py")
+        if st.button("🚪 Logout", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.success("Logged out successfully!")
+            st.switch_page("pages/1_🏠_Landing.py")
+    
     # Load fresh data from database
     db_items = get_user_food_items(st.session_state.current_user)
     food_items = []
@@ -218,24 +229,29 @@ def display_timeline_chart(items):
     items_data.sort(key=lambda x: x['expiry_date'])
     
     # Create timeline chart
-    fig = px.scatter(
-        x=[item['expiry_date'] for item in items_data],
-        y=[item['name'] for item in items_data],
-        color=[item['status'] for item in items_data],
-        hover_data=[item['category'] for item in items_data],
-        color_discrete_map={
-            "Safe": "#2E8B57",
-            "Expiring Soon": "#FFD700",
-            "Expired": "#DC143C"
-        },
-        title="Food Expiry Timeline"
-    )
+    if items_data:
+        df = pd.DataFrame(items_data)
+        fig = px.scatter(
+            df, x='expiry_date', y='name',
+            color='status',
+            color_discrete_map={
+                "Safe": "#2E8B57",
+                "Expiring Soon": "#FFD700",
+                "Expired": "#DC143C"
+            },
+            title="Food Expiry Timeline"
+        )
+    else:
+        fig = None
     
-    # Add vertical line for today
-    fig.add_vline(x=today, line_dash="dash", line_color="blue", 
-                  annotation_text="Today")
-    
-    st.plotly_chart(fig, use_container_width=True)
+    if fig:
+        # Add vertical line for today
+        fig.add_vline(x=today, line_dash="dash", line_color="blue", 
+                      annotation_text="Today")
+        
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No items to display in timeline")
 
 def display_money_saved_chart(items):
     """Display money saved over time"""

@@ -25,12 +25,24 @@ def main():
     st.markdown("# 📱 ExpiryGenie Dashboard")
     st.markdown(f"Welcome back, **{st.session_state.current_user}**! 🎉")
     
-    # Sidebar for input method selection
-    st.sidebar.markdown("## 🎯 Add Food Items")
-    input_method = st.sidebar.selectbox(
-        "Choose Input Method:",
-        ["📝 Manual Entry", "🎤 Voice Input", "📸 Image/OCR Scan"]
-    )
+    # Sidebar navigation and controls
+    with st.sidebar:
+        st.markdown("## 🧞‍♂️ ExpiryGenie")
+        
+        if st.button("🏠 Home", use_container_width=True):
+            st.switch_page("pages/1_🏠_Landing.py")
+            
+        if st.button("🚪 Logout", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.success("Logged out successfully!")
+            st.switch_page("pages/1_🏠_Landing.py")
+        
+        st.markdown("## 🎯 Add Food Items")
+        input_method = st.selectbox(
+            "Choose Input Method:",
+            ["📝 Manual Entry", "🎤 Voice Input", "📸 Image/OCR Scan"]
+        )
     
     # Main content area - full width for input methods
     if input_method == "📝 Manual Entry":
@@ -398,6 +410,9 @@ def display_extracted_items(extracted_items, source_type):
                     # Convert string dates to date objects
                     purchase_date_obj = datetime.strptime(item['purchase_date'], '%Y-%m-%d').date()
                     expiry_date_obj = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+                    
+                    # Debug information
+                    st.write(f"Attempting to save: {item['name']} for user: {st.session_state.current_user}")
                     
                     success = add_food_item(
                         user_email=st.session_state.current_user,
