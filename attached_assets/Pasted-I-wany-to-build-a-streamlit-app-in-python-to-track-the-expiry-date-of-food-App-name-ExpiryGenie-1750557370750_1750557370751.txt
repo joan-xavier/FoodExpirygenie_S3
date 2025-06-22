@@ -1,0 +1,57 @@
+I wany  to build a streamlit app in python to track the expiry date of food  App name : ‘ExpiryGenie’ with the following details [landing page: Tagline: "Track food easily. Store smart. Waste never.". Sky blue theme, genie serving food emoji.
+And Testimonials.
+Join here button; 
+SignUp/Login : Signup form
+ -Name, Email, Password
+Login form
+ - Email & Password
+Reset Password option (Forgot password link)
+Google Sign in;
+ Main Section: User Welcome Screen
+
+ Features 
+1. 1. Smart Auto-Tracking from Bill/Barcode
+•	Scan supermarket receipts or barcodes.
+•	Auto-fill item name + purchase date.
+•	Predict shelf life from database.
+2. Voice Input for Fridge Inventory
+•	“I bought chicken and milk today.”
+•	Use NLP to extract items and update inventory.
+3. Color-Coded Calendar View(using data dot method)
+•	Visual expiry timeline: Green (Safe), Yellow (Soon), Red (Expired).
+•	Tap date → shows items expiring that day.
+4. Notify 2–3 days before expiry.
+•	Include recipes or prompt "Are you using this soon?"
+5. Duplicate Purchase Warning
+•	When scanning a new bill, alert if you already have that item at home near expiry.
+6.  ML-Powered Shelf Life Estimator
+•	Learn from user’s habits (e.g., maybe their milk lasts 5 days, not 7).
+•	Adjust predictions over time.
+. 	Context-Aware Notifications
+•	Notify 2–3 days before expiry.
+•	Include recipes or prompt "Are you using this soon?"
+
+7. Gamified Dashboard
+•	“You've saved $X from avoiding waste this month.”
+•	Monthly badge/streaks for using near-expiry items.
+9. Family Sync Option
+•	Multiple users can update/view the fridge.
+•	Useful for roommates or family members.
+10. Avoid purchase of near to expiry items:
+ 
+Upload/Scan Bill 
+-	Add new items (manual mode, from the voice input / scaning the bill or picture of the food item where the purchase date and expiry date can be edited). Get the user approval of the extracted list with edit button, then approval can be given after checking.
+-	 Categorize the food category as grocery, cooked foood, pantry, froze … etc.,
+-	Any opened food item / cooked food item shelf life has to be reduced  to default value
+-	View items, Select , Delete option (all)
+-	Day-dot Calendar view(daily, weekly, monthly)
+Color-coded entries (Green = Safe, Yellow = Expiring Soon, Red = Expired) 
+Dashboard
+Stats whre every necessay
+User Input: OCR, Barcode, voice input/text based (to record with start and stop button and add all the food items from the image, where expiry date can be changed by the user optionally), photo or picture((to detect and add all the food items from the image, where expiry date can be changed by the user optionally),)
+Output Page: Food List (Sortable by Expiry Date) with day dot status
+Having drop down menu in table form/calendar view
+Money saved before expiry
+Recipe suggestion
+Option to play expiry reminder as the audio version of text
+Add other details where every necessary to incorporate all features. I want to use gemini api (Gemini 2.5 Flash Preview 05-20)to process the foot items data. ]
