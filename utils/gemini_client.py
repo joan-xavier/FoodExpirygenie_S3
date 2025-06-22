@@ -18,10 +18,9 @@ def process_voice_input(voice_text):
     """Process voice input using Gemini AI to extract food items"""
     
     try:
-        # Check if API key is available
-        if not api_key:
-            st.error("Gemini API key not found. Please add your API key in the secrets.")
-            return []
+        # Get Gemini client
+        client = get_gemini_client()
+        
         system_prompt = """
         You are a food inventory assistant. Extract food items from the user's voice input.
         
@@ -70,10 +69,9 @@ def process_image_input(image_file, image_type):
     """Process image input using Gemini AI to extract food items"""
     
     try:
-        # Check if API key is available
-        if not api_key:
-            st.error("Gemini API key not found. Please add your API key in the secrets.")
-            return []
+        # Get Gemini client
+        client = get_gemini_client()
+        
         # Reset file pointer to beginning
         image_file.seek(0)
         
