@@ -7,12 +7,21 @@ from google.genai import types
 import streamlit as st
 
 # Initialize Gemini client
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", "default_key"))
+def get_gemini_client():
+    """Get Gemini client with properly formatted API key"""
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not found")
+    return genai.Client(api_key=api_key)
 
 def process_voice_input(voice_text):
     """Process voice input using Gemini AI to extract food items"""
     
     try:
+        # Check if API key is available
+        if not api_key:
+            st.error("Gemini API key not found. Please add your API key in the secrets.")
+            return []
         system_prompt = """
         You are a food inventory assistant. Extract food items from the user's voice input.
         
@@ -50,6 +59,9 @@ def process_voice_input(voice_text):
         
         return []
         
+    except ValueError as e:
+        st.error("Please check your Gemini API key configuration.")
+        return []
     except Exception as e:
         st.error(f"Error processing voice input: {str(e)}")
         return []
@@ -58,6 +70,10 @@ def process_image_input(image_file, image_type):
     """Process image input using Gemini AI to extract food items"""
     
     try:
+        # Check if API key is available
+        if not api_key:
+            st.error("Gemini API key not found. Please add your API key in the secrets.")
+            return []
         # Reset file pointer to beginning
         image_file.seek(0)
         
@@ -115,9 +131,9 @@ def process_image_input(image_file, image_type):
         
         # Determine MIME type based on file content
         mime_type = "image/jpeg"
-        if image_file.type:
+        if hasattr(image_file, 'type') and image_file.type:
             mime_type = image_file.type
-        elif image_bytes[:4] == b'\x89PNG':
+        elif len(image_bytes) >= 4 and image_bytes[:4] == b'\x89PNG':
             mime_type = "image/png"
         
         response = client.models.generate_content(
@@ -140,6 +156,9 @@ def process_image_input(image_file, image_type):
         
         return []
         
+    except ValueError as e:
+        st.error("Please check your Gemini API key configuration.")
+        return []
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
         return []
@@ -151,6 +170,7 @@ def get_recipe_suggestions(expiring_items):
         return []
     
     try:
+        client = get_gemini_client()
         items_text = ", ".join([item['name'] for item in expiring_items])
         
         prompt = f"""
@@ -189,6 +209,7 @@ def analyze_food_waste_patterns(food_items):
     """Analyze food waste patterns using Gemini AI"""
     
     try:
+        client = get_gemini_client()
         # Prepare data for analysis
         items_data = []
         today = datetime.now().date()
@@ -240,6 +261,7 @@ def generate_shopping_list(current_items, preferences=None):
     """Generate smart shopping list based on current inventory"""
     
     try:
+        client = get_gemini_client()
         current_items_text = json.dumps([
             {'name': item['name'], 'category': item['category'], 'expiry_date': item['expiry_date']}
             for item in current_items
@@ -284,6 +306,7 @@ def detect_duplicate_purchases(new_items, existing_items):
     """Detect potential duplicate purchases using AI"""
     
     try:
+        client = get_gemini_client()
         existing_items_text = json.dumps([
             {'name': item['name'], 'category': item['category'], 'expiry_date': item['expiry_date']}
             for item in existing_items
