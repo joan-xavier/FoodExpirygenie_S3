@@ -437,56 +437,6 @@ def display_extracted_items(extracted_items, source_type):
             
     else:
         st.warning("No items found. Try a clearer image or different angle.")
-        
-        if st.button(f"✅ Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
-            if not confirmed_items:
-                st.warning("No items selected for addition")
-                return
-                
-            success_count = 0
-            failed_items = []
-            
-            for item in confirmed_items:
-                try:
-                    # Convert string dates to date objects
-                    purchase_date_obj = datetime.strptime(item['purchase_date'], '%Y-%m-%d').date()
-                    expiry_date_obj = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
-                    
-                    success = add_food_item(
-                        user_email=st.session_state.current_user,
-                        name=item['name'],
-                        category=item['category'],
-                        purchase_date=purchase_date_obj,
-                        expiry_date=expiry_date_obj,
-                        quantity=item['quantity'],
-                        opened=item['opened'],
-                        added_method=item['added_method']
-                    )
-                    
-                    if success:
-                        success_count += 1
-                    else:
-                        failed_items.append(item['name'])
-                        
-                except Exception as e:
-                    st.error(f"Error adding {item['name']}: {str(e)}")
-                    failed_items.append(item['name'])
-            
-            if success_count > 0:
-                st.success(f"Successfully added {success_count} items to your inventory!")
-                refresh_food_items()
-                
-                # Clear session state after successful addition
-                session_key = f"extracted_items_{source_type}"
-                if session_key in st.session_state:
-                    del st.session_state[session_key]
-                    
-                st.rerun()
-            
-            if failed_items:
-                st.error(f"Failed to add: {', '.join(failed_items)}")
-    else:
-        st.warning("⚠️ No items found. Try a clearer image or different angle.")
 
 def quick_stats_section():
     st.markdown("### 📊 Quick Stats")
