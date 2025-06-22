@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from collections import Counter
+from utils.database import get_user_food_items
 
 st.set_page_config(
     page_title="ExpiryGenie - Statistics",
@@ -22,35 +23,49 @@ def main():
     st.markdown("# 📊 ExpiryGenie Statistics")
     st.markdown(f"### Data insights for **{st.session_state.current_user}**")
     
-    if not st.session_state.food_items:
+    # Load fresh data from database
+    db_items = get_user_food_items(st.session_state.current_user)
+    food_items = []
+    for item in db_items:
+        food_items.append({
+            'id': item['id'],
+            'name': item['name'],
+            'category': item['category'],
+            'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
+            'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+            'quantity': item['quantity'],
+            'opened': item['opened'],
+            'added_method': item['added_method']
+        })
+    
+    if not food_items:
         st.info("📝 No data available yet. Add some food items to see statistics!")
         if st.button("➕ Go to Dashboard"):
             st.switch_page("pages/3_📱_Dashboard.py")
         return
     
     # Main metrics
-    display_main_metrics()
+    display_main_metrics(food_items)
     
     # Charts section
     col1, col2 = st.columns(2)
     
     with col1:
-        display_expiry_status_chart()
-        display_category_breakdown()
+        display_expiry_status_chart(food_items)
+        display_category_breakdown(food_items)
     
     with col2:
-        display_timeline_chart()
-        display_money_saved_chart()
+        display_timeline_chart(food_items)
+        display_money_saved_chart(food_items)
     
     # Additional insights
     st.markdown("---")
-    display_insights_and_recommendations()
+    display_insights_and_recommendations(food_items)
 
-def display_main_metrics():
+def display_main_metrics(items):
     """Display main KPI metrics"""
     
     today = datetime.now().date()
-    items = st.session_state.food_items
     
     # Calculate metrics
     total_items = len(items)
@@ -118,7 +133,7 @@ def display_main_metrics():
             help="Total money saved from avoiding food waste"
         )
 
-def display_expiry_status_chart():
+def display_expiry_status_chart(items):
     """Display pie chart of expiry status"""
     
     st.markdown("#### 🥧 Expiry Status Breakdown")
@@ -126,7 +141,7 @@ def display_expiry_status_chart():
     today = datetime.now().date()
     status_counts = {"Safe": 0, "Expiring Soon": 0, "Expired": 0}
     
-    for item in st.session_state.food_items:
+    for item in items:
         expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
         days_until_expiry = (expiry_date - today).days
         
@@ -152,12 +167,12 @@ def display_expiry_status_chart():
     fig.update_traces(textposition='inside', textinfo='percent+label')
     st.plotly_chart(fig, use_container_width=True)
 
-def display_category_breakdown():
+def display_category_breakdown(items):
     """Display bar chart of categories"""
     
     st.markdown("#### 📊 Category Breakdown")
     
-    categories = [item['category'] for item in st.session_state.food_items]
+    categories = [item['category'] for item in items]
     category_counts = Counter(categories)
     
     fig = px.bar(
@@ -172,7 +187,7 @@ def display_category_breakdown():
     fig.update_layout(showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
-def display_timeline_chart():
+def display_timeline_chart(items):
     """Display timeline of expiry dates"""
     
     st.markdown("#### 📅 Expiry Timeline")
@@ -181,7 +196,7 @@ def display_timeline_chart():
     items_data = []
     today = datetime.now().date()
     
-    for item in st.session_state.food_items:
+    for item in items:
         expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
         days_until_expiry = (expiry_date - today).days
         
@@ -222,7 +237,7 @@ def display_timeline_chart():
     
     st.plotly_chart(fig, use_container_width=True)
 
-def display_money_saved_chart():
+def display_money_saved_chart(items):
     """Display money saved over time"""
     
     st.markdown("#### 💰 Money Saved Tracking")
@@ -238,9 +253,9 @@ def display_money_saved_chart():
     for i in range(31):
         date = start_date + timedelta(days=i)
         # Simulate saving money by avoiding waste
-        if i > 0 and len(st.session_state.food_items) > 0:
+        if i > 0 and len(items) > 0:
             # Estimate daily savings based on items prevented from expiring
-            daily_saving = min(5.0, len(st.session_state.food_items) * 0.5)
+            daily_saving = min(5.0, len(items) * 0.5)
             current_savings += daily_saving * (i / 30)  # Gradual increase
         
         dates.append(date)
@@ -259,7 +274,7 @@ def display_money_saved_chart():
     
     st.plotly_chart(fig, use_container_width=True)
 
-def display_insights_and_recommendations():
+def display_insights_and_recommendations(items):
     """Display AI-powered insights and recommendations"""
     
     st.markdown("### 🧠 Smart Insights & Recommendations")
@@ -271,7 +286,7 @@ def display_insights_and_recommendations():
     recommendations = []
     
     # Category analysis
-    categories = [item['category'] for item in st.session_state.food_items]
+    categories = [item['category'] for item in items]
     category_counts = Counter(categories)
     most_common_category = category_counts.most_common(1)[0] if category_counts else None
     
@@ -282,7 +297,7 @@ def display_insights_and_recommendations():
     expiring_soon = []
     expired = []
     
-    for item in st.session_state.food_items:
+    for item in items:
         expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
         days_until_expiry = (expiry_date - today).days
         
@@ -300,12 +315,12 @@ def display_insights_and_recommendations():
         recommendations.append("🧹 Clean out expired items to maintain food safety")
     
     # Money saving insights
-    total_value = sum(estimate_food_value(item['name'], item['quantity']) for item in st.session_state.food_items)
+    total_value = sum(estimate_food_value(item['name'], item['quantity']) for item in items)
     if total_value > 0:
         insights.append(f"💰 Your current inventory is worth approximately **${total_value:.2f}**")
     
     # Usage pattern analysis
-    added_methods = [item['added_method'] for item in st.session_state.food_items]
+    added_methods = [item['added_method'] for item in items]
     method_counts = Counter(added_methods)
     most_used_method = method_counts.most_common(1)[0] if method_counts else None
     
@@ -341,7 +356,7 @@ def display_insights_and_recommendations():
     badges = []
     
     # Item count badges
-    total_items = len(st.session_state.food_items)
+    total_items = len(items)
     if total_items >= 50:
         badges.append("🏆 Inventory Master (50+ items tracked)")
     elif total_items >= 20:
@@ -359,12 +374,12 @@ def display_insights_and_recommendations():
         badges.append("🪙 Penny Pincher ($10+ saved)")
     
     # Category diversity badge
-    unique_categories = len(set(item['category'] for item in st.session_state.food_items))
+    unique_categories = len(set(item['category'] for item in items))
     if unique_categories >= 5:
         badges.append("🌈 Category Champion (5+ categories)")
     
     # Method diversity badge
-    unique_methods = len(set(item['added_method'] for item in st.session_state.food_items))
+    unique_methods = len(set(item['added_method'] for item in items))
     if unique_methods >= 3:
         badges.append("🎯 Multi-Method Master (All input methods used)")
     

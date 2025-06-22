@@ -2,7 +2,8 @@ import streamlit as st
 import hashlib
 import json
 import os
-from utils.auth import hash_password, verify_password, save_user_data, load_user_data
+from utils.auth import hash_password, verify_password
+from utils.database import create_user, authenticate_user, get_user_by_email
 
 st.set_page_config(
     page_title="ExpiryGenie - Authentication",
@@ -12,9 +13,6 @@ st.set_page_config(
 
 def main():
     st.markdown("# 🔐 Authentication")
-    
-    # Load existing user data
-    load_user_data()
     
     # Create tabs for different auth methods
     tab1, tab2, tab3 = st.tabs(["🔑 Login", "📝 Sign Up", "🔄 Reset Password"])
@@ -31,21 +29,20 @@ def main():
             if login_submit:
                 if not email or not password:
                     st.error("❌ Please fill in all fields")
-                elif email in st.session_state.user_data:
-                    user_info = st.session_state.user_data[email]
-                    if verify_password(password, user_info['password_hash']):
+                else:
+                    password_hash = hash_password(password)
+                    success, user_data = authenticate_user(email, password_hash)
+                    
+                    if success and user_data:
                         st.session_state.logged_in = True
                         st.session_state.current_user = email
-                        # Load user's food items
-                        st.session_state.food_items = user_info.get('food_items', [])
-                        st.session_state.money_saved = user_info.get('money_saved', 0.0)
+                        st.session_state.food_items = []
+                        st.session_state.money_saved = float(user_data.get('money_saved', 0.0))
                         st.success("✅ Login successful!")
                         st.balloons()
                         st.switch_page("pages/3_📱_Dashboard.py")
                     else:
-                        st.error("❌ Invalid password")
-                else:
-                    st.error("❌ User not found")
+                        st.error("❌ Invalid email or password")
         
         # Google Sign In (placeholder)
         st.markdown("---")
@@ -77,29 +74,23 @@ def main():
                     st.error("❌ Password must be at least 6 characters long")
                 elif not terms_accepted:
                     st.error("❌ Please accept the terms and conditions")
-                elif email in st.session_state.user_data:
-                    st.error("❌ User already exists with this email")
                 else:
-                    # Create new user
+                    # Create new user in database
                     password_hash = hash_password(password)
-                    st.session_state.user_data[email] = {
-                        'name': name,
-                        'password_hash': password_hash,
-                        'food_items': [],
-                        'money_saved': 0.0,
-                        'created_at': str(st.session_state.get('current_time', 'unknown'))
-                    }
-                    save_user_data()
+                    success, message = create_user(name, email, password_hash)
                     
-                    # Auto login
-                    st.session_state.logged_in = True
-                    st.session_state.current_user = email
-                    st.session_state.food_items = []
-                    st.session_state.money_saved = 0.0
-                    
-                    st.success("🎉 Account created successfully!")
-                    st.balloons()
-                    st.switch_page("pages/3_📱_Dashboard.py")
+                    if success:
+                        # Auto login
+                        st.session_state.logged_in = True
+                        st.session_state.current_user = email
+                        st.session_state.food_items = []
+                        st.session_state.money_saved = 0.0
+                        
+                        st.success("🎉 Account created successfully!")
+                        st.balloons()
+                        st.switch_page("pages/3_📱_Dashboard.py")
+                    else:
+                        st.error(f"❌ {message}")
     
     # Reset Password Tab
     with tab3:
@@ -112,11 +103,13 @@ def main():
             if reset_submit:
                 if not reset_email:
                     st.error("❌ Please enter your email")
-                elif reset_email in st.session_state.user_data:
-                    st.success("✅ Password reset link sent to your email!")
-                    st.info("🚧 Email functionality coming soon! For now, please contact support.")
                 else:
-                    st.error("❌ Email not found in our records")
+                    user = get_user_by_email(reset_email)
+                    if user:
+                        st.success("✅ Password reset link sent to your email!")
+                        st.info("🚧 Email functionality coming soon! For now, please contact support.")
+                    else:
+                        st.error("❌ Email not found in our records")
     
     # Current Status
     if st.session_state.logged_in:

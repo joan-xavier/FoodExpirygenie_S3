@@ -1,8 +1,8 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["libGL", "libGLU", "portaudio", "tesseract"]
+packages = ["glibcLocales", "libGL", "libGLU", "portaudio", "tesseract"]
 
 [deployment]
 deploymentTarget = "autoscale"

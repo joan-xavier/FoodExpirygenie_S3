@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import json
-from utils.food_data import add_food_item, get_food_categories, calculate_expiry_date
+from utils.food_data import get_food_categories, calculate_expiry_date
 from utils.gemini_client import process_voice_input, process_image_input
 from utils.voice_input import voice_to_text
 from utils.image_processing import extract_text_from_image, process_food_image
+from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items
 
 st.set_page_config(
     page_title="ExpiryGenie - Dashboard",
@@ -75,21 +76,25 @@ def manual_entry_section():
                     reduced_days = max(1, days_diff // 3)  # Reduce to 1/3 of original
                     final_expiry = purchase_date + timedelta(days=reduced_days)
                 
-                food_item = {
-                    'name': food_name,
-                    'category': category,
-                    'purchase_date': purchase_date.strftime('%Y-%m-%d'),
-                    'expiry_date': final_expiry.strftime('%Y-%m-%d'),
-                    'quantity': quantity or "1 unit",
-                    'opened': opened,
-                    'added_method': 'manual',
-                    'id': len(st.session_state.food_items)
-                }
+                # Add to database
+                success = add_food_item(
+                    user_email=st.session_state.current_user,
+                    name=food_name,
+                    category=category,
+                    purchase_date=purchase_date,
+                    expiry_date=final_expiry,
+                    quantity=quantity or "1 unit",
+                    opened=opened,
+                    added_method='manual'
+                )
                 
-                st.session_state.food_items.append(food_item)
-                save_food_items()
-                st.success(f"✅ Added {food_name} to your inventory!")
-                st.rerun()
+                if success:
+                    st.success(f"✅ Added {food_name} to your inventory!")
+                    # Refresh food items from database
+                    refresh_food_items()
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to add food item")
             else:
                 st.error("❌ Please enter a food item name")
 
@@ -165,10 +170,27 @@ def process_voice_text(voice_text):
                             })
                 
                 if st.button("✅ Confirm and Add All Items", type="primary"):
-                    st.session_state.food_items.extend(confirmed_items)
-                    save_food_items()
-                    st.success(f"🎉 Added {len(confirmed_items)} items to your inventory!")
-                    st.rerun()
+                    success_count = 0
+                    for item in confirmed_items:
+                        success = add_food_item(
+                            user_email=st.session_state.current_user,
+                            name=item['name'],
+                            category=item['category'],
+                            purchase_date=item['purchase_date'],
+                            expiry_date=item['expiry_date'],
+                            quantity=item['quantity'],
+                            opened=item['opened'],
+                            added_method=item['added_method']
+                        )
+                        if success:
+                            success_count += 1
+                    
+                    if success_count > 0:
+                        st.success(f"🎉 Added {success_count} items to your inventory!")
+                        refresh_food_items()
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to add items")
             else:
                 st.warning("⚠️ No food items found in your input. Try being more specific!")
                 
@@ -345,10 +367,27 @@ def display_extracted_items(extracted_items, source_type):
                     })
         
         if st.button(f"✅ Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
-            st.session_state.food_items.extend(confirmed_items)
-            save_food_items()
-            st.success(f"🎉 Added {len(confirmed_items)} items to your inventory!")
-            st.rerun()
+            success_count = 0
+            for item in confirmed_items:
+                success = add_food_item(
+                    user_email=st.session_state.current_user,
+                    name=item['name'],
+                    category=item['category'],
+                    purchase_date=item['purchase_date'],
+                    expiry_date=item['expiry_date'],
+                    quantity=item['quantity'],
+                    opened=item['opened'],
+                    added_method=item['added_method']
+                )
+                if success:
+                    success_count += 1
+            
+            if success_count > 0:
+                st.success(f"🎉 Added {success_count} items to your inventory!")
+                refresh_food_items()
+                st.rerun()
+            else:
+                st.error("❌ Failed to add items")
     else:
         st.warning("⚠️ No items found. Try a clearer image or different angle.")
 
@@ -384,16 +423,13 @@ def quick_stats_section():
         # Quick actions
         st.markdown("### ⚡ Quick Actions")
         if st.button("🗑️ Remove Expired", use_container_width=True):
-            original_count = len(st.session_state.food_items)
-            st.session_state.food_items = [
-                item for item in st.session_state.food_items
-                if datetime.strptime(item['expiry_date'], '%Y-%m-%d').date() >= today
-            ]
-            removed_count = original_count - len(st.session_state.food_items)
+            removed_count = delete_expired_items(st.session_state.current_user)
             if removed_count > 0:
-                save_food_items()
                 st.success(f"🗑️ Removed {removed_count} expired items")
+                refresh_food_items()
                 st.rerun()
+            else:
+                st.info("No expired items to remove")
         
         if st.button("📅 Go to Calendar", use_container_width=True):
             st.switch_page("pages/4_📅_Calendar.py")
@@ -474,26 +510,30 @@ def display_food_items():
             
             with col4:
                 if st.button(f"🗑️ Delete", key=f"delete_{item['id']}"):
-                    st.session_state.food_items = [
-                        food for food in st.session_state.food_items 
-                        if food['id'] != item['id']
-                    ]
-                    save_food_items()
-                    st.success(f"Deleted {item['name']}")
-                    st.rerun()
+                    success = delete_food_item(item['id'], st.session_state.current_user)
+                    if success:
+                        st.success(f"Deleted {item['name']}")
+                        refresh_food_items()
+                        st.rerun()
+                    else:
+                        st.error("Failed to delete item")
 
-def save_food_items():
-    """Save food items to user data"""
+def refresh_food_items():
+    """Refresh food items from database"""
     if st.session_state.current_user:
-        if st.session_state.current_user not in st.session_state.user_data:
-            st.session_state.user_data[st.session_state.current_user] = {}
-        
-        st.session_state.user_data[st.session_state.current_user]['food_items'] = st.session_state.food_items
-        st.session_state.user_data[st.session_state.current_user]['money_saved'] = st.session_state.money_saved
-        
-        # Save to file
-        with open('user_data.json', 'w') as f:
-            json.dump(st.session_state.user_data, f)
+        db_items = get_user_food_items(st.session_state.current_user)
+        st.session_state.food_items = []
+        for item in db_items:
+            st.session_state.food_items.append({
+                'id': item['id'],
+                'name': item['name'],
+                'category': item['category'],
+                'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
+                'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+                'quantity': item['quantity'],
+                'opened': item['opened'],
+                'added_method': item['added_method']
+            })
 
 if __name__ == "__main__":
     main()

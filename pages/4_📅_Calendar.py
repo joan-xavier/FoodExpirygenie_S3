@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 import calendar
+from utils.database import get_user_food_items
 
 st.set_page_config(
     page_title="ExpiryGenie - Calendar",
@@ -22,7 +23,22 @@ def main():
     st.markdown("# 📅 Expiry Calendar")
     st.markdown("### Color-coded visual timeline of your food expiry dates")
     
-    if not st.session_state.food_items:
+    # Load fresh data from database
+    db_items = get_user_food_items(st.session_state.current_user)
+    food_items = []
+    for item in db_items:
+        food_items.append({
+            'id': item['id'],
+            'name': item['name'],
+            'category': item['category'],
+            'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
+            'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+            'quantity': item['quantity'],
+            'opened': item['opened'],
+            'added_method': item['added_method']
+        })
+    
+    if not food_items:
         st.info("📝 No food items to display. Add some items in the Dashboard first!")
         if st.button("➕ Go to Dashboard"):
             st.switch_page("pages/3_📱_Dashboard.py")
@@ -37,13 +53,13 @@ def main():
     with col3:
         show_categories = st.multiselect(
             "🏷️ Filter Categories:",
-            options=list(set(item['category'] for item in st.session_state.food_items)),
-            default=list(set(item['category'] for item in st.session_state.food_items))
+            options=list(set(item['category'] for item in food_items)),
+            default=list(set(item['category'] for item in food_items))
         )
     
     # Filter items by categories
     filtered_items = [
-        item for item in st.session_state.food_items 
+        item for item in food_items 
         if item['category'] in show_categories
     ]
     
@@ -315,11 +331,11 @@ def create_expiry_timeline(items):
     return fig
 
 # Add timeline visualization
-if st.session_state.food_items:
+if food_items:
     st.markdown("---")
     st.markdown("### 📊 Expiry Timeline Visualization")
     
-    timeline_fig = create_expiry_timeline(st.session_state.food_items)
+    timeline_fig = create_expiry_timeline(food_items)
     if timeline_fig:
         st.plotly_chart(timeline_fig, use_container_width=True)
 
