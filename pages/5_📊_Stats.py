@@ -475,7 +475,7 @@ def estimate_food_value(name, quantity):
     else:
         # Try to extract number
         import re
-        numbers = re.findall(r'\d+', quantity)
+        numbers = re.findall(r'\d+', str(quantity))
         if numbers:
             multiplier = float(numbers[0])
         else:
