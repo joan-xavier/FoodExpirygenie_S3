@@ -264,14 +264,21 @@ def image_input_section():
                 st.image(receipt_image, caption="Uploaded Receipt", use_container_width=True)
                 
                 if st.button("🔍 Extract Items from Receipt", type="primary", key="process_receipt"):
-                    process_receipt_image(receipt_image)
+                    with st.spinner("Processing receipt image..."):
+                        extracted_items = process_receipt_image(receipt_image)
+                        if extracted_items:
+                            st.session_state.extracted_items_receipt = extracted_items
+                            st.success(f"Found {len(extracted_items)} items!")
+                            st.rerun()
+                        else:
+                            st.error("No items found in the receipt")
             except Exception as e:
                 st.error(f"Error displaying image: {str(e)}")
-        
-        # Display previously extracted items if they exist
-        session_key = "extracted_items_receipt"
-        if session_key in st.session_state and st.session_state[session_key]:
-            display_extracted_items(st.session_state[session_key], "receipt")
+    
+    # Display extracted items only once, outside the image upload section
+    if "extracted_items_receipt" in st.session_state and st.session_state.extracted_items_receipt:
+        st.markdown("---")
+        display_extracted_items(st.session_state.extracted_items_receipt, "receipt")
     
     with tab2:
         st.markdown("#### 📊 Barcode Scanning")
@@ -288,14 +295,21 @@ def image_input_section():
                 st.image(barcode_image, caption="Uploaded Barcode", use_container_width=True)
                 
                 if st.button("🔍 Scan Barcode", type="primary", key="process_barcode"):
-                    process_barcode_image(barcode_image)
+                    with st.spinner("Processing barcode image..."):
+                        extracted_items = process_barcode_image(barcode_image)
+                        if extracted_items:
+                            st.session_state.extracted_items_barcode = extracted_items
+                            st.success(f"Found {len(extracted_items)} items!")
+                            st.rerun()
+                        else:
+                            st.error("No items found from barcode")
             except Exception as e:
                 st.error(f"Error displaying image: {str(e)}")
-        
-        # Display previously extracted items if they exist
-        session_key = "extracted_items_barcode"
-        if session_key in st.session_state and st.session_state[session_key]:
-            display_extracted_items(st.session_state[session_key], "barcode")
+    
+    # Display extracted items only once, outside the image upload section
+    if "extracted_items_barcode" in st.session_state and st.session_state.extracted_items_barcode:
+        st.markdown("---")
+        display_extracted_items(st.session_state.extracted_items_barcode, "barcode")
     
     with tab3:
         st.markdown("#### 🍎 Food Photo Recognition")
@@ -451,12 +465,13 @@ def display_extracted_items(extracted_items, source_type):
                     include = st.checkbox("Include", 
                                         value=True, 
                                         key=f"{item_key}_include")
-                    if st.button("🗑️ Remove", key=f"{item_key}_remove", help="Remove this item"):
+                    if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{hash(item.get('name', str(i)))}", help="Remove this item"):
                         # Remove item from session state
-                        current_items = st.session_state[session_key].copy()
-                        current_items.pop(i)
-                        st.session_state[session_key] = current_items
-                        st.rerun()
+                        if session_key in st.session_state and i < len(st.session_state[session_key]):
+                            current_items = st.session_state[session_key].copy()
+                            current_items.pop(i)
+                            st.session_state[session_key] = current_items
+                            st.rerun()
                 
                 if include and name.strip():
                     confirmed_items.append({
@@ -469,7 +484,7 @@ def display_extracted_items(extracted_items, source_type):
                         'added_method': source_type
                     })
         
-        if confirmed_items and st.button(f"Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}"):
+        if confirmed_items and st.button(f"Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}_{hash(str(confirmed_items))}"):
             success_count = 0
             failed_items = []
             
