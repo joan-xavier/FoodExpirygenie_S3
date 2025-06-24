@@ -25,6 +25,10 @@ def main():
     st.markdown("# 📱 ExpiryGenie Dashboard")
     st.markdown(f"Welcome back, **{st.session_state.current_user}**! 🎉")
     
+    # Always load food items on page load
+    if 'food_items' not in st.session_state or not st.session_state.food_items:
+        refresh_food_items()
+    
     # Sidebar navigation and controls
     with st.sidebar:
         st.markdown("## 🧞‍♂️ ExpiryGenie")
@@ -584,13 +588,17 @@ def quick_stats_section():
 def display_food_items():
     st.markdown("### 🍎 Your Food Inventory")
     
-    # Initialize food_items if not exists
-    if 'food_items' not in st.session_state:
+    # Initialize food_items if not exists or if empty
+    if 'food_items' not in st.session_state or not st.session_state.food_items:
         refresh_food_items()
     
     if not st.session_state.food_items:
         st.info("📝 Your inventory is empty. Add some food items above!")
-        st.info(f"Debug: Current user: {st.session_state.get('current_user', 'None')}")
+        # Show debug info to help troubleshoot
+        if st.session_state.get('current_user'):
+            if st.button("🔄 Try Loading Items Again"):
+                refresh_food_items()
+                st.rerun()
         return
     
     # Create DataFrame for better display
@@ -819,6 +827,7 @@ def refresh_food_items():
     """Refresh food items from database"""
     if st.session_state.current_user:
         try:
+            print(f"Refreshing food items for user: {st.session_state.current_user}")
             db_items = get_user_food_items(st.session_state.current_user)
             st.session_state.food_items = []
             for item in db_items:
@@ -826,17 +835,18 @@ def refresh_food_items():
                     'id': item['id'],
                     'name': item['name'],
                     'category': item['category'],
-                    'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
-                    'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+                    'purchase_date': item['purchase_date'].strftime('%Y-%m-%d') if hasattr(item['purchase_date'], 'strftime') else str(item['purchase_date']),
+                    'expiry_date': item['expiry_date'].strftime('%Y-%m-%d') if hasattr(item['expiry_date'], 'strftime') else str(item['expiry_date']),
                     'quantity': item['quantity'],
                     'opened': item['opened'],
                     'added_method': item['added_method']
                 })
-            print(f"Loaded {len(st.session_state.food_items)} items for user {st.session_state.current_user}")
+            print(f"Successfully loaded {len(st.session_state.food_items)} items for user {st.session_state.current_user}")
         except Exception as e:
-            st.error(f"Error loading food items: {str(e)}")
+            print(f"Error loading food items: {str(e)}")
             st.session_state.food_items = []
     else:
+        print("No current user found, setting empty food items")
         st.session_state.food_items = []
 
 if __name__ == "__main__":
