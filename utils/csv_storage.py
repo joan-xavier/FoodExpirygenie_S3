@@ -210,9 +210,9 @@ def update_food_item_details(item_id: int, name: str, quantity: str, opened: boo
         mask = food_items_df['id'] == item_id
         
         if mask.any():
-            food_items_df.loc[mask, 'name'] = name
-            food_items_df.loc[mask, 'quantity'] = quantity
-            food_items_df.loc[mask, 'opened'] = opened
+            food_items_df.loc[mask, 'name'] = str(name)
+            food_items_df.loc[mask, 'quantity'] = str(quantity)
+            food_items_df.loc[mask, 'opened'] = bool(opened)
             save_food_items(food_items_df)
             return True
         return False

@@ -38,12 +38,13 @@ def main():
     db_items = get_user_food_items(st.session_state.current_user)
     food_items = []
     for item in db_items:
+        # Dates are already strings in CSV storage, no need to convert
         food_items.append({
             'id': item['id'],
             'name': item['name'],
             'category': item['category'],
-            'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
-            'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+            'purchase_date': item['purchase_date'],
+            'expiry_date': item['expiry_date'],
             'quantity': item['quantity'],
             'opened': item['opened'],
             'added_method': item['added_method']
@@ -208,7 +209,13 @@ def display_timeline_chart(items):
     today = datetime.now().date()
     
     for item in items:
-        expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+        # Handle date conversion - dates from CSV are strings  
+        expiry_date_str = item['expiry_date']
+        if isinstance(expiry_date_str, str):
+            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        else:
+            expiry_date = expiry_date_str.date() if hasattr(expiry_date_str, 'date') else expiry_date_str
+        
         days_until_expiry = (expiry_date - today).days
         
         if days_until_expiry < 0:
@@ -318,7 +325,13 @@ def display_insights_and_recommendations(items):
     expired = []
     
     for item in items:
-        expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+        # Handle date conversion - dates from CSV are strings
+        expiry_date_str = item['expiry_date']
+        if isinstance(expiry_date_str, str):
+            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        else:
+            expiry_date = expiry_date_str.date() if hasattr(expiry_date_str, 'date') else expiry_date_str
+        
         days_until_expiry = (expiry_date - today).days
         
         if days_until_expiry < 0:
