@@ -569,8 +569,13 @@ def quick_stats_section():
 def display_food_items():
     st.markdown("### 🍎 Your Food Inventory")
     
+    # Initialize food_items if not exists
+    if 'food_items' not in st.session_state:
+        refresh_food_items()
+    
     if not st.session_state.food_items:
         st.info("📝 Your inventory is empty. Add some food items above!")
+        st.info(f"Debug: Current user: {st.session_state.get('current_user', 'None')}")
         return
     
     # Create DataFrame for better display
@@ -798,19 +803,26 @@ def delete_selected_items():
 def refresh_food_items():
     """Refresh food items from database"""
     if st.session_state.current_user:
-        db_items = get_user_food_items(st.session_state.current_user)
+        try:
+            db_items = get_user_food_items(st.session_state.current_user)
+            st.session_state.food_items = []
+            for item in db_items:
+                st.session_state.food_items.append({
+                    'id': item['id'],
+                    'name': item['name'],
+                    'category': item['category'],
+                    'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
+                    'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+                    'quantity': item['quantity'],
+                    'opened': item['opened'],
+                    'added_method': item['added_method']
+                })
+            print(f"Loaded {len(st.session_state.food_items)} items for user {st.session_state.current_user}")
+        except Exception as e:
+            st.error(f"Error loading food items: {str(e)}")
+            st.session_state.food_items = []
+    else:
         st.session_state.food_items = []
-        for item in db_items:
-            st.session_state.food_items.append({
-                'id': item['id'],
-                'name': item['name'],
-                'category': item['category'],
-                'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
-                'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
-                'quantity': item['quantity'],
-                'opened': item['opened'],
-                'added_method': item['added_method']
-            })
 
 if __name__ == "__main__":
     main()

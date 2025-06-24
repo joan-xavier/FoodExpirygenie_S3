@@ -47,7 +47,7 @@ def main():
     # Calendar view options
     col1, col2, col3 = st.columns(3)
     with col1:
-        view_mode = st.selectbox("📊 View Mode:", ["Monthly", "Weekly", "Daily"], key="calendar_view_mode")
+        view_mode = st.selectbox("📊 View Mode:", ["Monthly", "Weekly", "Daily"], key=f"calendar_view_mode_{hash(st.session_state.current_user)}")
     with col2:
         selected_date = st.date_input("📅 Select Date:", value=datetime.now().date())
     with col3:
