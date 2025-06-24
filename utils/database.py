@@ -306,3 +306,36 @@ def get_default_expiry_prediction(food_name, purchase_date):
     
     # Default fallback
     return purchase_date + timedelta(days=7)
+
+def update_food_item_date(item_id, date_type, new_date):
+    """Update purchase or expiry date for a food item"""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    
+    try:
+        with conn.cursor() as cur:
+            if date_type == 'purchase_date':
+                cur.execute("""
+                    UPDATE food_items 
+                    SET purchase_date = %s 
+                    WHERE id = %s
+                """, (new_date, item_id))
+            elif date_type == 'expiry_date':
+                cur.execute("""
+                    UPDATE food_items 
+                    SET expiry_date = %s 
+                    WHERE id = %s
+                """, (new_date, item_id))
+            else:
+                return False
+            
+            conn.commit()
+            return True
+            
+    except Exception as e:
+        st.error(f"Error updating {date_type}: {str(e)}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()

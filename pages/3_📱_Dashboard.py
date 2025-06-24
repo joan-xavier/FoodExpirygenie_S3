@@ -6,7 +6,7 @@ from utils.food_data import get_food_categories, calculate_expiry_date
 from utils.gemini_client import process_voice_input, process_image_input
 from utils.voice_input import voice_to_text
 from utils.image_processing import extract_text_from_image, process_food_image
-from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date
+from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date, update_food_item_date
 
 st.set_page_config(
     page_title="ExpiryGenie - Dashboard",
@@ -111,7 +111,7 @@ def manual_entry_section():
                 st.error("❌ Please enter a food item name")
 
 def voice_input_section():
-    st.markdown("### 🎤 Voice Input with NLP")
+    st.markdown("### 🎤 Voice Input with Speech Recognition")
     st.info("💡 Try saying: 'I bought chicken, milk, and bananas today' or 'Add 2 pounds of ground beef expiring next Friday'")
     
     # Voice recording state
@@ -126,17 +126,27 @@ def voice_input_section():
         if not st.session_state.recording:
             if st.button("🎙️ Start Recording", use_container_width=True, type="primary"):
                 st.session_state.recording = True
-                st.rerun()
+                try:
+                    # Real voice recognition
+                    from utils.voice_input import voice_to_text
+                    recognized_text = voice_to_text()
+                    if recognized_text:
+                        st.session_state.voice_text = recognized_text
+                        st.success(f"Voice recognized: {recognized_text[:50]}...")
+                    else:
+                        st.warning("Could not recognize speech. Please try again or type manually.")
+                    st.session_state.recording = False
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Voice recognition error: {str(e)}")
+                    st.info("Voice recognition not available. Please type your input manually.")
+                    st.session_state.recording = False
+                    st.rerun()
         else:
-            if st.button("⏹️ Stop Recording", use_container_width=True, type="secondary"):
-                st.session_state.recording = False
-                # Simulate voice recognition
-                st.session_state.voice_text = "I bought 2 pounds of chicken breast, 1 gallon of milk, and 6 bananas today"
-                st.success("Voice recorded and transcribed!")
-                st.rerun()
+            st.info("🎤 Listening... Speak now!")
     
     with col2:
-        if st.button("🔄 Process Voice", use_container_width=True, disabled=not st.session_state.voice_text):
+        if st.button("🔄 Process Voice Input", use_container_width=True, disabled=not st.session_state.voice_text):
             if st.session_state.voice_text.strip():
                 process_voice_text(st.session_state.voice_text)
     
@@ -146,17 +156,12 @@ def voice_input_section():
             st.session_state.recording = False
             st.rerun()
     
-    # Recording status
-    if st.session_state.recording:
-        st.warning("🎤 Recording... Click 'Stop Recording' when finished")
-        st.markdown("**Listening for:** Food items, quantities, dates, expiry information")
-    
     # Voice input text area (editable)
     voice_text = st.text_area(
-        "🗣️ Transcribed Voice / Manual Input",
+        "🗣️ Voice Recognition Result / Manual Input",
         value=st.session_state.voice_text,
-        placeholder="Voice will be transcribed here, or type manually...",
-        help="Voice input will appear here automatically, or you can type directly",
+        placeholder="Voice recognition will appear here, or type manually...",
+        help="Speak using the microphone button above, or type directly",
         height=100,
         key="voice_input_area"
     )
@@ -582,60 +587,155 @@ def display_food_items():
     
     df['Status'] = df['expiry_date'].apply(get_status)
     
-    # Top controls row
-    col1, col2, col3, col4 = st.columns(4)
+    # Enhanced filtering and sorting controls
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
     with col1:
-        sort_by = st.selectbox("Sort by:", ["expiry_date", "name", "category", "purchase_date"])
+        view_type = st.selectbox("View:", [
+            "All Items", "Latest Added", "Oldest Added", 
+            "Expiring Soon", "Recently Added", "By Category"
+        ])
+    
     with col2:
-        sort_order = st.selectbox("Order:", ["Ascending", "Descending"])
+        if view_type == "By Category":
+            category_filter = st.selectbox("Category:", 
+                ["All"] + list(items_df['category'].unique()) if len(items_df) > 0 else ["All"])
+        else:
+            sort_by = st.selectbox("Sort by:", 
+                ["expiry_date", "name", "category", "purchase_date", "Days_Left"])
+    
     with col3:
-        filter_status = st.selectbox("Filter by status:", ["All", "🟢 Safe", "🟡 Expiring Soon", "🔴 Expired"])
+        status_filter = st.selectbox("Status:", 
+            ["All", "🟢 Safe", "🟡 Expiring Soon", "🔴 Expired"])
+    
     with col4:
-        # CSV Download button
-        if st.button("📥 Download CSV", type="primary"):
-            csv_data = df.to_csv(index=False)
-            st.download_button(
-                label="⬇️ Download Food Inventory",
-                data=csv_data,
-                file_name=f"food_inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
+        opened_filter = st.selectbox("Package Status:", 
+            ["All", "Opened", "Packed"])
+    
+    with col5:
+        # Batch operations
+        if st.button("🗑️ Delete Selected", type="secondary"):
+            delete_selected_items()
     
     # Apply filters
-    if filter_status != "All":
-        df = df[df['Status'] == filter_status]
+    filtered_df = items_df.copy()
     
-    # Apply sorting
-    ascending = sort_order == "Ascending"
-    df = df.sort_values(by=sort_by, ascending=ascending)
+    # View type filtering
+    if view_type == "Latest Added":
+        filtered_df = filtered_df.sort_values('purchase_date_obj', ascending=False)
+    elif view_type == "Oldest Added":
+        filtered_df = filtered_df.sort_values('purchase_date_obj', ascending=True)
+    elif view_type == "Expiring Soon":
+        filtered_df = filtered_df[filtered_df['Days_Left'] <= 7].sort_values('Days_Left')
+    elif view_type == "Recently Added":
+        cutoff_date = today - timedelta(days=7)
+        filtered_df = filtered_df[filtered_df['purchase_date_obj'] >= pd.Timestamp(cutoff_date)]
+    elif view_type == "By Category" and 'category_filter' in locals() and category_filter != "All":
+        filtered_df = filtered_df[filtered_df['category'] == category_filter]
+    elif view_type == "All Items" and 'sort_by' in locals():
+        ascending = True
+        filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending)
     
-    # Display items
-    for idx, item in df.iterrows():
-        with st.expander(f"{item['Status']} {item['name']} - Expires: {item['expiry_date']}", expanded=False):
-            col1, col2, col3, col4 = st.columns(4)
+    # Status filtering
+    if status_filter != "All":
+        filtered_df = filtered_df[filtered_df['Status'] == status_filter]
+    
+    # Package status filtering
+    if opened_filter == "Opened":
+        filtered_df = filtered_df[filtered_df['opened'] == True]
+    elif opened_filter == "Packed":
+        filtered_df = filtered_df[filtered_df['opened'] == False]
+    
+    # Selection state
+    if 'selected_items' not in st.session_state:
+        st.session_state.selected_items = set()
+    
+    # Display summary
+    st.write(f"Showing {len(filtered_df)} of {len(items_df)} items")
+    
+    # Select all checkbox
+    if len(filtered_df) > 0:
+        select_all = st.checkbox("Select All Visible Items")
+        if select_all:
+            st.session_state.selected_items.update(filtered_df['id'].tolist())
+    
+    # Display items with enhanced editing
+    for idx, item in filtered_df.iterrows():
+        with st.container():
+            # Selection and basic info row
+            col1, col2, col3, col4, col5, col6 = st.columns([0.5, 2, 1.5, 1.5, 1, 0.5])
             
             with col1:
-                st.write(f"**Category:** {item['category']}")
-                st.write(f"**Quantity:** {item['quantity']}")
+                selected = st.checkbox("", 
+                    value=item['id'] in st.session_state.selected_items,
+                    key=f"select_item_{item['id']}")
+                if selected:
+                    st.session_state.selected_items.add(item['id'])
+                else:
+                    st.session_state.selected_items.discard(item['id'])
             
             with col2:
-                st.write(f"**Purchase Date:** {item['purchase_date']}")
-                st.write(f"**Expiry Date:** {item['expiry_date']}")
+                # Item name with package status icon
+                package_icon = "📦" if not item.get('opened', False) else "📂"
+                st.markdown(f"**{package_icon} {item['name']}**")
+                st.caption(f"{item['category']} • {item['quantity']}")
             
             with col3:
-                st.write(f"**Added via:** {item['added_method']}")
-                if item.get('opened'):
-                    st.write("**Status:** Opened/Cooked")
+                st.write(f"**Purchase:** {item['purchase_date']}")
+                # Edit purchase date
+                if st.button("✏️", key=f"edit_purchase_{item['id']}", help="Edit purchase date"):
+                    edit_item_date(item['id'], 'purchase_date', item['purchase_date'])
             
             with col4:
-                if st.button(f"🗑️ Delete", key=f"delete_{item['id']}"):
-                    success = delete_food_item(item['id'], st.session_state.current_user)
-                    if success:
+                st.write(f"**Expiry:** {item['expiry_date']}")
+                # Edit expiry date
+                if st.button("✏️", key=f"edit_expiry_{item['id']}", help="Edit expiry date"):
+                    edit_item_date(item['id'], 'expiry_date', item['expiry_date'])
+            
+            with col5:
+                st.markdown(f"**{item['Status']}**")
+                days_left = item['Days_Left']
+                if days_left >= 0:
+                    st.caption(f"{days_left} days left")
+                else:
+                    st.caption(f"{abs(days_left)} days overdue")
+            
+            with col6:
+                if st.button("🗑️", key=f"delete_single_{item['id']}", help="Delete item"):
+                    if delete_food_item(item['id'], st.session_state.current_user):
                         st.success(f"Deleted {item['name']}")
                         refresh_food_items()
                         st.rerun()
-                    else:
-                        st.error("Failed to delete item")
+
+def edit_item_date(item_id, date_type, current_date):
+    """Handle inline date editing"""
+    key = f"edit_{date_type}_{item_id}"
+    
+    if key not in st.session_state:
+        st.session_state[key] = False
+    
+    if st.session_state[key]:
+        new_date = st.date_input(
+            f"New {date_type.replace('_', ' ').title()}:",
+            value=datetime.strptime(current_date, '%Y-%m-%d').date(),
+            key=f"date_input_{key}"
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Save", key=f"save_{key}"):
+                # Update in database
+                update_food_item_date(item_id, date_type, new_date)
+                st.session_state[key] = False
+                refresh_food_items()
+                st.rerun()
+        with col2:
+            if st.button("Cancel", key=f"cancel_{key}"):
+                st.session_state[key] = False
+                st.rerun()
+    else:
+        st.session_state[key] = True
+        st.rerun()
 
 def refresh_food_items():
     """Refresh food items from database"""
