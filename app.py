@@ -14,15 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize CSV storage on app start
-if 'csv_initialized' not in st.session_state:
-    try:
-        if init_csv_storage():
-            st.session_state.csv_initialized = True
-        else:
-            st.error("Failed to initialize data storage")
-    except Exception as e:
-        st.error(f"Storage initialization error: {e}")
+# Initialize database on app start
+if 'db_initialized' not in st.session_state:
+    if init_csv_storage():
+        st.session_state.db_initialized = True
 
 # Initialize session state
 if 'user_data' not in st.session_state:

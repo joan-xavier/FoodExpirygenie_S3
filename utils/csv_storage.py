@@ -25,28 +25,22 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def init_csv_storage():
     """Initialize CSV files with proper headers"""
-    try:
-        ensure_data_directory()
-        
-        # Initialize users CSV
-        if not os.path.exists(USERS_CSV):
-            users_df = pd.DataFrame(columns=[
-                'id', 'email', 'name', 'password_hash', 'money_saved', 'created_at'
-            ])
-            users_df.to_csv(USERS_CSV, index=False)
-        
-        # Initialize food items CSV
-        if not os.path.exists(FOOD_ITEMS_CSV):
-            food_items_df = pd.DataFrame(columns=[
-                'id', 'user_email', 'name', 'category', 'purchase_date', 
-                'expiry_date', 'quantity', 'opened', 'added_method'
-            ])
-            food_items_df.to_csv(FOOD_ITEMS_CSV, index=False)
-        
-        return True
-    except Exception as e:
-        print(f"Error initializing CSV storage: {e}")
-        return False
+    ensure_data_directory()
+    
+    # Initialize users CSV
+    if not os.path.exists(USERS_CSV):
+        users_df = pd.DataFrame(columns=[
+            'id', 'email', 'name', 'password_hash', 'money_saved', 'created_at'
+        ])
+        users_df.to_csv(USERS_CSV, index=False)
+    
+    # Initialize food items CSV
+    if not os.path.exists(FOOD_ITEMS_CSV):
+        food_items_df = pd.DataFrame(columns=[
+            'id', 'user_email', 'name', 'category', 'purchase_date', 
+            'expiry_date', 'quantity', 'opened', 'added_method'
+        ])
+        food_items_df.to_csv(FOOD_ITEMS_CSV, index=False)
 
 def load_users() -> pd.DataFrame:
     """Load users from CSV"""
