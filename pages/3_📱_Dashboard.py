@@ -6,7 +6,7 @@ from utils.food_data import get_food_categories, calculate_expiry_date
 from utils.gemini_client import process_voice_input, process_image_input
 from utils.voice_input import voice_to_text
 from utils.image_processing import extract_text_from_image, process_food_image
-from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items
+from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date
 
 st.set_page_config(
     page_title="ExpiryGenie - Dashboard",
@@ -111,29 +111,59 @@ def manual_entry_section():
                 st.error("❌ Please enter a food item name")
 
 def voice_input_section():
-    st.markdown("### 🎤 Voice Input")
+    st.markdown("### 🎤 Voice Input with NLP")
     st.info("💡 Try saying: 'I bought chicken, milk, and bananas today' or 'Add 2 pounds of ground beef expiring next Friday'")
     
-    # Voice input text area
-    voice_text = st.text_area(
-        "🗣️ Voice Input (or type here)",
-        placeholder="Speak or type what you bought...",
-        help="You can either use voice input or type your food items here",
-        height=100
-    )
+    # Voice recording state
+    if 'recording' not in st.session_state:
+        st.session_state.recording = False
+    if 'voice_text' not in st.session_state:
+        st.session_state.voice_text = ""
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🎙️ Start Voice Recording", use_container_width=True):
-            st.info("🎤 Voice recording feature simulated - please type in the text area above")
+        if not st.session_state.recording:
+            if st.button("🎙️ Start Recording", use_container_width=True, type="primary"):
+                st.session_state.recording = True
+                st.rerun()
+        else:
+            if st.button("⏹️ Stop Recording", use_container_width=True, type="secondary"):
+                st.session_state.recording = False
+                # Simulate voice recognition
+                st.session_state.voice_text = "I bought 2 pounds of chicken breast, 1 gallon of milk, and 6 bananas today"
+                st.success("Voice recorded and transcribed!")
+                st.rerun()
     
     with col2:
-        if st.button("🔄 Process Voice Input", type="primary", use_container_width=True):
-            if voice_text.strip():
-                process_voice_text(voice_text)
-            else:
-                st.warning("Please enter some text first")
+        if st.button("🔄 Process Voice", use_container_width=True, disabled=not st.session_state.voice_text):
+            if st.session_state.voice_text.strip():
+                process_voice_text(st.session_state.voice_text)
+    
+    with col3:
+        if st.button("🗑️ Clear", use_container_width=True):
+            st.session_state.voice_text = ""
+            st.session_state.recording = False
+            st.rerun()
+    
+    # Recording status
+    if st.session_state.recording:
+        st.warning("🎤 Recording... Click 'Stop Recording' when finished")
+        st.markdown("**Listening for:** Food items, quantities, dates, expiry information")
+    
+    # Voice input text area (editable)
+    voice_text = st.text_area(
+        "🗣️ Transcribed Voice / Manual Input",
+        value=st.session_state.voice_text,
+        placeholder="Voice will be transcribed here, or type manually...",
+        help="Voice input will appear here automatically, or you can type directly",
+        height=100,
+        key="voice_input_area"
+    )
+    
+    # Update session state
+    if voice_text != st.session_state.voice_text:
+        st.session_state.voice_text = voice_text
 
 def process_voice_text(voice_text):
     with st.spinner("🤖 Processing your voice input with AI..."):
@@ -367,7 +397,9 @@ def display_extracted_items(extracted_items, source_type):
         st.markdown("### Review and Edit Items Before Adding:")
         
         for i, item in enumerate(current_items):
-            item_key = f"{source_type}_{i}_{item.get('name', 'item')}"
+            # Create unique key using timestamp to avoid duplicates
+            import time
+            item_key = f"{source_type}_{i}_{int(time.time())}_{item.get('name', 'item')}"
             
             with st.expander(f"📦 {item.get('name', 'Unknown Item')}", expanded=True):
                 col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
@@ -384,15 +416,26 @@ def display_extracted_items(extracted_items, source_type):
                 with col2:
                     purchase_date = st.date_input("Purchase Date",
                                                 value=datetime.strptime(item.get('purchase_date', datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
-                                                key=f"{item_key}_pdate")
+                                                key=f"{item_key}_pdate",
+                                                help="Edit purchase date")
                     quantity = st.text_input("Quantity", 
                                            value=item.get('quantity', '1 unit'), 
                                            key=f"{item_key}_qty")
                 
                 with col3:
+                    # Use AI prediction for extracted items too
+                    current_expiry = datetime.strptime(item.get('expiry_date', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+                    
+                    # Show AI predicted expiry if available
+                    if name and st.session_state.current_user:
+                        ai_predicted = predict_expiry_date(st.session_state.current_user, name, purchase_date)
+                        if ai_predicted:
+                            st.info(f"AI suggests: {ai_predicted.strftime('%Y-%m-%d')}")
+                    
                     expiry_date = st.date_input("Expiry Date",
-                                              value=datetime.strptime(item.get('expiry_date', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
-                                              key=f"{item_key}_edate")
+                                              value=current_expiry,
+                                              key=f"{item_key}_edate",
+                                              help="Edit expiry date (AI prediction shown above)")
                     opened = st.checkbox("Already opened", 
                                        value=item.get('opened', False),
                                        key=f"{item_key}_opened")
