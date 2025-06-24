@@ -650,6 +650,35 @@ def display_food_items():
         if st.button("🗑️ Delete Selected", type="secondary"):
             delete_selected_items()
     
+    # Add CSV download functionality
+    if len(items_df) > 0:
+        # Prepare export data
+        export_df = items_df.copy()
+        export_df = export_df.drop(['expiry_date_obj', 'purchase_date_obj'], axis=1)
+        export_df = export_df.rename(columns={
+            'name': 'Food Name',
+            'category': 'Category', 
+            'purchase_date': 'Purchase Date',
+            'expiry_date': 'Expiry Date',
+            'quantity': 'Quantity',
+            'opened': 'Opened',
+            'added_method': 'Added Method',
+            'Status': 'Current Status',
+            'Days_Left': 'Days Until Expiry'
+        })
+        
+        # Convert to CSV
+        csv_data = export_df.to_csv(index=False)
+        
+        # Add download button
+        st.download_button(
+            label="📥 Download CSV",
+            data=csv_data,
+            file_name=f"food_inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            help="Download your complete food inventory as CSV file"
+        )
+    
     # Apply filters
     filtered_df = items_df.copy()
     
