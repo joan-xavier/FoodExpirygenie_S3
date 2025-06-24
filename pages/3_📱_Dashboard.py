@@ -464,7 +464,7 @@ def display_extracted_items(extracted_items, source_type):
                     include = st.checkbox("Include", 
                                         value=True, 
                                         key=f"{item_key}_include")
-                    if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{hash(str(item)[:20])}", help="Remove this item"):
+                    if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{abs(hash(str(item) + str(i)))}", help="Remove this item"):
                         # Remove item from session state
                         if session_key in st.session_state and i < len(st.session_state[session_key]):
                             current_items = st.session_state[session_key].copy()
@@ -483,7 +483,7 @@ def display_extracted_items(extracted_items, source_type):
                         'added_method': source_type
                     })
         
-        if confirmed_items and st.button(f"Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}_{hash(str(confirmed_items))}"):
+        if confirmed_items and st.button(f"Confirm and Add All Items ({source_type})", type="primary", key=f"confirm_{source_type}_{abs(hash(str(confirmed_items) + source_type))}"):
             success_count = 0
             failed_items = []
             
@@ -717,28 +717,7 @@ def display_food_items():
                 st.write(f"**Purchase:** {item['purchase_date']}")
             
             with col4:
-                # Inline editing for expiry date
-                edit_expiry_key = f"edit_expiry_{item['id']}"
-                if edit_expiry_key in st.session_state and st.session_state[edit_expiry_key]:
-                    new_expiry = st.date_input("Expiry Date:", 
-                                             value=datetime.strptime(item['expiry_date'], '%Y-%m-%d').date(),
-                                             key=f"new_expiry_{item['id']}")
-                    col_save, col_cancel = st.columns(2)
-                    with col_save:
-                        if st.button("💾", key=f"save_expiry_{item['id']}", help="Save"):
-                            update_food_item_date(item['id'], 'expiry_date', new_expiry)
-                            st.session_state[edit_expiry_key] = False
-                            refresh_food_items()
-                            st.rerun()
-                    with col_cancel:
-                        if st.button("❌", key=f"cancel_expiry_{item['id']}", help="Cancel"):
-                            st.session_state[edit_expiry_key] = False
-                            st.rerun()
-                else:
-                    st.write(f"**Expiry:** {item['expiry_date']}")
-                    if st.button("✏️", key=f"edit_expiry_btn_{item['id']}", help="Edit expiry date"):
-                        st.session_state[edit_expiry_key] = True
-                        st.rerun()
+                st.write(f"**Expires:** {item['expiry_date']} ({item['Days_Left']} days)")
             
             with col5:
                 st.markdown(f"**{item['Status']}**")
@@ -749,11 +728,59 @@ def display_food_items():
                     st.caption(f"{abs(days_left)} days overdue")
             
             with col6:
-                if st.button("🗑️", key=f"delete_single_{item['id']}", help="Delete item"):
-                    if delete_food_item(item['id'], st.session_state.current_user):
-                        st.success(f"Deleted {item['name']}")
+                # Single edit button for comprehensive editing
+                if st.button("✏️ Edit", key=f"edit_{item['id']}", help="Edit this item"):
+                    st.session_state[f"editing_{item['id']}"] = True
+                    st.rerun()
+            
+            # Complete edit interface when editing
+            if st.session_state.get(f"editing_{item['id']}", False):
+                st.markdown("##### ✏️ Edit Item")
+                edit_col1, edit_col2 = st.columns(2)
+                
+                with edit_col1:
+                    new_name = st.text_input("Food Name:", value=item['name'], key=f"new_name_{item['id']}")
+                    new_quantity = st.text_input("Quantity:", value=item['quantity'], key=f"new_qty_{item['id']}")
+                    new_opened = st.checkbox("Opened/Cooked", value=item.get('opened', False), key=f"new_opened_{item['id']}")
+                
+                with edit_col2:
+                    new_purchase_date = st.date_input("Purchase Date:", 
+                                                    value=datetime.strptime(item['purchase_date'], '%Y-%m-%d').date(),
+                                                    key=f"new_pdate_{item['id']}")
+                    new_expiry_date = st.date_input("Expiry Date:", 
+                                                  value=datetime.strptime(item['expiry_date'], '%Y-%m-%d').date(),
+                                                  key=f"new_edate_{item['id']}")
+                
+                button_col1, button_col2, button_col3 = st.columns(3)
+                with button_col1:
+                    if st.button("💾 Save Changes", key=f"save_{item['id']}", type="primary"):
+                        success1 = update_food_item_details(item['id'], new_name, new_quantity, new_opened)
+                        success2 = update_food_item_date(item['id'], 'purchase_date', new_purchase_date)
+                        success3 = update_food_item_date(item['id'], 'expiry_date', new_expiry_date)
+                        
+                        if success1 and success2 and success3:
+                            st.success("All changes saved!")
+                        else:
+                            st.error("Some changes failed")
+                        
+                        st.session_state[f"editing_{item['id']}"] = False
                         refresh_food_items()
                         st.rerun()
+                
+                with button_col2:
+                    if st.button("❌ Cancel", key=f"cancel_{item['id']}"):
+                        st.session_state[f"editing_{item['id']}"] = False
+                        st.rerun()
+                
+                with button_col3:
+                    if st.button("🗑️ Delete", key=f"delete_{item['id']}", help="Delete this item"):
+                        if delete_food_item(item['id'], st.session_state.current_user):
+                            st.success("Item deleted!")
+                            st.session_state[f"editing_{item['id']}"] = False
+                            refresh_food_items()
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete item")
 
 
 
