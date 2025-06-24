@@ -242,3 +242,67 @@ def delete_expired_items(user_email):
         return 0
     finally:
         conn.close()
+
+def predict_expiry_date(user_email, food_name, purchase_date):
+    """Predict expiry date based on historical data using ML"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Get historical data for similar food items
+            cur.execute("""
+                SELECT name, purchase_date, expiry_date,
+                       EXTRACT(days FROM expiry_date - purchase_date) as shelf_life
+                FROM food_items 
+                WHERE user_email = %s 
+                AND LOWER(name) LIKE %s
+                ORDER BY created_at DESC
+                LIMIT 10
+            """, (user_email, f"%{food_name.lower()}%"))
+            
+            historical_data = cur.fetchall()
+            
+            if historical_data:
+                # Simple prediction: average shelf life from historical data
+                shelf_lives = [item['shelf_life'] for item in historical_data if item['shelf_life'] and item['shelf_life'] > 0]
+                
+                if shelf_lives:
+                    from statistics import mean
+                    from datetime import timedelta
+                    avg_shelf_life = int(mean(shelf_lives))
+                    predicted_expiry = purchase_date + timedelta(days=avg_shelf_life)
+                    return predicted_expiry
+            
+            # Fallback: default shelf life based on food type
+            return get_default_expiry_prediction(food_name, purchase_date)
+            
+    except Exception as e:
+        print(f"Error predicting expiry date: {str(e)}")
+        return None
+    finally:
+        conn.close()
+
+def get_default_expiry_prediction(food_name, purchase_date):
+    """Get default expiry prediction based on food categories"""
+    from datetime import timedelta
+    
+    food_name_lower = food_name.lower()
+    
+    # Default shelf lives (in days) for different food categories
+    shelf_life_map = {
+        'milk': 7, 'cheese': 14, 'yogurt': 10, 'butter': 21,
+        'chicken': 3, 'beef': 3, 'pork': 3, 'fish': 2, 'turkey': 3,
+        'apple': 14, 'banana': 7, 'orange': 10, 'lettuce': 7, 'tomato': 7,
+        'bread': 5, 'rice': 365, 'pasta': 365, 'cereal': 180,
+        'frozen': 90, 'canned': 365
+    }
+    
+    # Find matching category
+    for keyword, days in shelf_life_map.items():
+        if keyword in food_name_lower:
+            return purchase_date + timedelta(days=days)
+    
+    # Default fallback
+    return purchase_date + timedelta(days=7)
