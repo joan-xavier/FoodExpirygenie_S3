@@ -19,9 +19,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ### Backend Architecture
 - **Language**: Python 3.11
-- **Database**: PostgreSQL 16 with psycopg2 connectivity
+- **Database**: CSV-based storage with pandas for data management
 - **Session Management**: Streamlit session state for user data persistence
-- **File Storage**: JSON-based fallback for user data (user_data.json)
+- **File Storage**: CSV files for structured data storage (users.csv, food_items.csv)
 
 ### Data Processing Components
 - **OCR**: Tesseract for text extraction from images
@@ -44,9 +44,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - **Image Processing**: OCR scanning of receipts and food labels
 - **Smart Categorization**: Predefined food categories (Grocery, Dairy, Meat & Poultry, etc.)
 
-### Database Schema
-- **Users Table**: id, email, name, password_hash, money_saved, created_at
-- **Food Items Table**: id, user_email, name, category, purchase_date, expiry_date, quantity, opened, added_method
+### Data Storage Schema
+- **Users CSV**: id, email, name, password_hash, money_saved, created_at
+- **Food Items CSV**: id, user_email, name, category, purchase_date, expiry_date, quantity, opened, added_method
 
 ### Calendar Visualization
 - Color-coded calendar view showing expiry dates
@@ -60,18 +60,17 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ## Data Flow
 
-1. **User Authentication**: Login → Session establishment → Database user verification
-2. **Food Item Addition**: Input (Manual/Voice/Image) → AI Processing → Database storage
-3. **Calendar View**: Database query → Date processing → Visual rendering
-4. **Statistics**: Data aggregation → Chart generation → Dashboard display
+1. **User Authentication**: Login → Session establishment → CSV user verification
+2. **Food Item Addition**: Input (Manual/Voice/Image) → AI Processing → CSV storage
+3. **Calendar View**: CSV data retrieval → Date processing → Visual rendering
+4. **Statistics**: Data aggregation from CSV → Chart generation → Dashboard display
 
 ## External Dependencies
 
 ### Core Libraries
 - `streamlit>=1.46.0` - Web framework
-- `pandas>=2.3.0` - Data manipulation
+- `pandas>=2.3.0` - Data manipulation and CSV storage
 - `plotly>=6.1.2` - Data visualization
-- `psycopg2-binary>=2.9.10` - PostgreSQL connectivity
 
 ### AI and Processing
 - `google-genai>=1.21.1` - Gemini AI integration
@@ -81,7 +80,7 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - `pyaudio>=0.2.14` - Audio recording
 
 ### Environment Requirements
-- PostgreSQL 16 database
+- File system access for CSV storage
 - Tesseract OCR engine
 - Audio processing libraries (portaudio)
 - OpenGL libraries for image processing
@@ -95,11 +94,10 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - **Process**: Streamlit server with custom port configuration
 
 ### Environment Variables
-- `PGHOST`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGPORT` - Database connection
 - `GEMINI_API_KEY` - Google AI service authentication
 
 ### Resource Requirements
-- PostgreSQL database instance
+- File system storage for CSV files
 - Audio processing capabilities
 - Image processing libraries
 - Network access for AI API calls
@@ -107,10 +105,13 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 ## Recent Changes
 
 ```
+- June 24, 2025: Migrated from PostgreSQL to CSV-only storage system
+- June 24, 2025: Implemented comprehensive CSV storage utilities with pandas
+- June 24, 2025: Updated all data access functions to use CSV backend
+- June 24, 2025: Simplified deployment by removing database dependencies
 - June 24, 2025: Implemented comprehensive inline editing for all food item properties
 - June 24, 2025: Added advanced inventory filtering (Latest/Oldest/Expiring Soon/By Category)
 - June 24, 2025: Enhanced voice input with real speech recognition capabilities
-- June 24, 2025: Fixed PostgreSQL database query compatibility issues
 - June 24, 2025: Added AI-powered expiry date prediction using historical data
 - June 24, 2025: Implemented batch selection and deletion functionality
 - June 24, 2025: Added visual package status indicators (📦 packed, 📂 opened)

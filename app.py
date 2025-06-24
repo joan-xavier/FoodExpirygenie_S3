@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import os
-from utils.database import init_database, get_user_food_items
+from utils.csv_storage import init_csv_storage
 
 # Configure page settings
 st.set_page_config(
@@ -16,7 +16,7 @@ st.set_page_config(
 
 # Initialize database on app start
 if 'db_initialized' not in st.session_state:
-    if init_database():
+    if init_csv_storage():
         st.session_state.db_initialized = True
 
 # Initialize session state

@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 import calendar
-from utils.database import get_user_food_items
+from utils.csv_storage import get_user_food_items
 
 st.set_page_config(
     page_title="ExpiryGenie - Calendar",
