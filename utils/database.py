@@ -316,6 +316,30 @@ def get_default_expiry_prediction(food_name, purchase_date):
     # Default fallback
     return purchase_date + timedelta(days=7)
 
+def update_food_item_details(item_id, name, quantity, opened):
+    """Update name, quantity, and opened status for a food item"""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE food_items 
+                SET name = %s, quantity = %s, opened = %s 
+                WHERE id = %s
+            """, (name, quantity, opened, item_id))
+            
+            conn.commit()
+            return True
+            
+    except Exception as e:
+        st.error(f"Error updating item details: {str(e)}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
 def update_food_item_date(item_id, date_type, new_date):
     """Update purchase or expiry date for a food item"""
     conn = get_db_connection()

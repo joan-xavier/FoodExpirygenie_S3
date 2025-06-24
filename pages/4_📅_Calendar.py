@@ -330,14 +330,8 @@ def create_expiry_timeline(items):
     
     return fig
 
-# Add timeline visualization
-if food_items:
-    st.markdown("---")
-    st.markdown("### 📊 Expiry Timeline Visualization")
-    
-    timeline_fig = create_expiry_timeline(food_items)
-    if timeline_fig:
-        st.plotly_chart(timeline_fig, use_container_width=True)
+if __name__ == "__main__":
+    main()
 
     # Sidebar navigation
     with st.sidebar:
