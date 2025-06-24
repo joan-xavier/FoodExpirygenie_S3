@@ -127,30 +127,25 @@ def voice_input_section():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if not st.session_state.recording:
-            if st.button("🎙️ Start Recording", use_container_width=True, type="primary"):
-                st.session_state.recording = True
+        if st.button("🎤 Record Voice", type="primary", use_container_width=True):
+            with st.spinner("🎙️ Recording... Speak now!"):
                 try:
-                    # Real voice recognition
                     from utils.voice_input import voice_to_text
                     recognized_text = voice_to_text()
-                    if recognized_text:
-                        st.session_state.voice_text = recognized_text
+                    if recognized_text and recognized_text.strip():
+                        st.session_state.voice_text = recognized_text.strip()
                         st.success(f"Voice recognized: {recognized_text[:50]}...")
+                        st.rerun()
                     else:
                         st.warning("Could not recognize speech. Please try again or type manually.")
-                    st.session_state.recording = False
-                    st.rerun()
                 except Exception as e:
                     st.error(f"Voice recognition error: {str(e)}")
                     st.info("Voice recognition not available. Please type your input manually.")
-                    st.session_state.recording = False
-                    st.rerun()
-        else:
-            st.info("🎤 Listening... Speak now!")
     
     with col2:
-        if st.button("🔄 Process Voice Input", use_container_width=True, disabled=not st.session_state.voice_text):
+        # Auto-enable when there's text
+        has_text = bool(st.session_state.voice_text and st.session_state.voice_text.strip())
+        if st.button("🤖 Extract Food Items", use_container_width=True, disabled=not has_text):
             if st.session_state.voice_text.strip():
                 process_voice_text(st.session_state.voice_text)
     
@@ -714,54 +709,12 @@ def display_food_items():
                     st.session_state.selected_items.discard(item['id'])
             
             with col2:
-                # Inline editing for name and details
-                edit_name_key = f"edit_name_{item['id']}"
-                if edit_name_key in st.session_state and st.session_state[edit_name_key]:
-                    new_name = st.text_input("Food Name:", value=item['name'], key=f"new_name_{item['id']}")
-                    new_quantity = st.text_input("Quantity:", value=item['quantity'], key=f"new_quantity_{item['id']}")
-                    new_opened = st.checkbox("Opened/Cooked", value=item.get('opened', False), key=f"new_opened_{item['id']}")
-                    col_save, col_cancel = st.columns(2)
-                    with col_save:
-                        if st.button("💾", key=f"save_name_{item['id']}", help="Save changes"):
-                            update_food_item_details(item['id'], new_name, new_quantity, new_opened)
-                            st.session_state[edit_name_key] = False
-                            refresh_food_items()
-                            st.rerun()
-                    with col_cancel:
-                        if st.button("❌", key=f"cancel_name_{item['id']}", help="Cancel"):
-                            st.session_state[edit_name_key] = False
-                            st.rerun()
-                else:
-                    package_icon = "📦" if not item.get('opened', False) else "📂"
-                    st.markdown(f"**{package_icon} {item['name']}**")
-                    st.caption(f"{item['category']} • {item['quantity']}")
-                    if st.button("✏️", key=f"edit_name_btn_{item['id']}", help="Edit name and details"):
-                        st.session_state[edit_name_key] = True
-                        st.rerun()
+                package_icon = "📦" if not item.get('opened', False) else "📂"
+                st.markdown(f"**{package_icon} {item['name']}**")
+                st.caption(f"{item['category']} • {item['quantity']}")
             
             with col3:
-                # Inline editing for purchase date
-                edit_purchase_key = f"edit_purchase_{item['id']}"
-                if edit_purchase_key in st.session_state and st.session_state[edit_purchase_key]:
-                    new_purchase = st.date_input("Purchase Date:", 
-                                               value=datetime.strptime(item['purchase_date'], '%Y-%m-%d').date(),
-                                               key=f"new_purchase_{item['id']}")
-                    col_save, col_cancel = st.columns(2)
-                    with col_save:
-                        if st.button("💾", key=f"save_purchase_{item['id']}", help="Save"):
-                            update_food_item_date(item['id'], 'purchase_date', new_purchase)
-                            st.session_state[edit_purchase_key] = False
-                            refresh_food_items()
-                            st.rerun()
-                    with col_cancel:
-                        if st.button("❌", key=f"cancel_purchase_{item['id']}", help="Cancel"):
-                            st.session_state[edit_purchase_key] = False
-                            st.rerun()
-                else:
-                    st.write(f"**Purchase:** {item['purchase_date']}")
-                    if st.button("✏️", key=f"edit_purchase_btn_{item['id']}", help="Edit purchase date"):
-                        st.session_state[edit_purchase_key] = True
-                        st.rerun()
+                st.write(f"**Purchase:** {item['purchase_date']}")
             
             with col4:
                 # Inline editing for expiry date
