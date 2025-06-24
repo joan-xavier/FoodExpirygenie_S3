@@ -31,8 +31,8 @@ def main():
             'id': item['id'],
             'name': item['name'],
             'category': item['category'],
-            'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
-            'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
+            'purchase_date': item['purchase_date'],
+            'expiry_date': item['expiry_date'],
             'quantity': item['quantity'],
             'opened': item['opened'],
             'added_method': item['added_method']

@@ -87,7 +87,13 @@ def display_main_metrics(items):
     total_value = 0
     
     for item in items:
-        expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+        # Handle date conversion - dates from CSV are strings
+        expiry_date_str = item['expiry_date']
+        if isinstance(expiry_date_str, str):
+            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        else:
+            expiry_date = expiry_date_str.date() if hasattr(expiry_date_str, 'date') else expiry_date_str
+        
         days_until_expiry = (expiry_date - today).days
         
         # Estimate value (simplified)
@@ -154,7 +160,13 @@ def display_expiry_status_chart(items):
     status_counts = {"Safe": 0, "Expiring Soon": 0, "Expired": 0}
     
     for item in items:
-        expiry_date = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
+        # Handle date conversion - dates from CSV are strings
+        expiry_date_str = item['expiry_date']
+        if isinstance(expiry_date_str, str):
+            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        else:
+            expiry_date = expiry_date_str.date() if hasattr(expiry_date_str, 'date') else expiry_date_str
+        
         days_until_expiry = (expiry_date - today).days
         
         if days_until_expiry < 0:
@@ -453,7 +465,7 @@ def estimate_food_value(name, quantity):
             break
     
     # Adjust for quantity (simplified)
-    quantity_lower = quantity.lower()
+    quantity_lower = str(quantity).lower()
     if 'lb' in quantity_lower or 'pound' in quantity_lower:
         multiplier = 1.0
     elif 'gallon' in quantity_lower:
