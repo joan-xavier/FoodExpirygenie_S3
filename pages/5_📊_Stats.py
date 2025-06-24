@@ -245,8 +245,9 @@ def display_timeline_chart(items):
         fig = None
     
     if fig:
-        # Add vertical line for today
-        fig.add_vline(x=today, line_dash="dash", line_color="blue", 
+        # Add vertical line for today (convert date to string for plotly)
+        today_str = today.strftime('%Y-%m-%d')
+        fig.add_vline(x=today_str, line_dash="dash", line_color="blue", 
                       annotation_text="Today")
         
         st.plotly_chart(fig, use_container_width=True)

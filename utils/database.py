@@ -149,7 +149,6 @@ def add_food_item(user_email, name, category, purchase_date, expiry_date, quanti
             
     except Exception as e:
         print(f"Database error adding food item: {str(e)}")  # Debug logging
-        st.error(f"Failed to save item: {str(e)}")
         conn.rollback()
         return False
     finally:

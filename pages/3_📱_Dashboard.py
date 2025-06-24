@@ -231,6 +231,11 @@ def image_input_section():
                     process_receipt_image(receipt_image)
             except Exception as e:
                 st.error(f"Error displaying image: {str(e)}")
+        
+        # Display previously extracted items if they exist
+        session_key = "extracted_items_receipt"
+        if session_key in st.session_state and st.session_state[session_key]:
+            display_extracted_items(st.session_state[session_key], "receipt")
     
     with tab2:
         st.markdown("#### 📊 Barcode Scanning")
@@ -249,6 +254,11 @@ def image_input_section():
                     process_barcode_image(barcode_image)
             except Exception as e:
                 st.error(f"Error displaying image: {str(e)}")
+        
+        # Display previously extracted items if they exist
+        session_key = "extracted_items_barcode"
+        if session_key in st.session_state and st.session_state[session_key]:
+            display_extracted_items(st.session_state[session_key], "barcode")
     
     with tab3:
         st.markdown("#### 🍎 Food Photo Recognition")
@@ -267,6 +277,11 @@ def image_input_section():
                     process_food_photo(food_image)
             except Exception as e:
                 st.error(f"Error displaying image: {str(e)}")
+        
+        # Display previously extracted items if they exist
+        session_key = "extracted_items_food_photo"
+        if session_key in st.session_state and st.session_state[session_key]:
+            display_extracted_items(st.session_state[session_key], "food_photo")
 
 def process_receipt_image(image):
     with st.spinner("🤖 Extracting items from receipt..."):
@@ -411,9 +426,6 @@ def display_extracted_items(extracted_items, source_type):
                     purchase_date_obj = datetime.strptime(item['purchase_date'], '%Y-%m-%d').date()
                     expiry_date_obj = datetime.strptime(item['expiry_date'], '%Y-%m-%d').date()
                     
-                    # Debug information
-                    st.write(f"Attempting to save: {item['name']} for user: {st.session_state.current_user}")
-                    
                     success = add_food_item(
                         user_email=st.session_state.current_user,
                         name=item['name'],
@@ -443,9 +455,11 @@ def display_extracted_items(extracted_items, source_type):
                     del st.session_state[session_key]
                     
                 st.rerun()
-            
-            if failed_items:
-                st.error(f"Failed to add: {', '.join(failed_items)}")
+            elif failed_items:
+                st.error(f"Failed to add items: {', '.join(failed_items)}")
+                st.info("This might be due to user authentication. Please try logging out and back in.")
+            else:
+                st.warning("No items were processed.")
         
         if not confirmed_items:
             st.warning("No items selected for addition. Please check at least one item.")
