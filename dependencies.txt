@@ -1,0 +1,29 @@
+# ExpiryGenie Dependencies
+# Use: pip install -r dependencies.txt
+
+# Core Web Framework
+streamlit>=1.46.0
+
+# Data Processing and Storage
+pandas>=2.3.0
+
+# Data Visualization
+plotly>=6.1.2
+
+# AI and Machine Learning
+google-genai>=1.21.1
+
+# Image Processing and Computer Vision
+opencv-python>=4.11.0.86
+pytesseract>=0.3.13
+
+# Audio and Speech Recognition
+speechrecognition>=3.14.3
+pyaudio>=0.2.14
+
+# Database Support (optional - for PostgreSQL migration compatibility)
+psycopg2-binary>=2.9.0
+
+# Additional Utilities
+Pillow>=10.0.0
+numpy>=1.24.0

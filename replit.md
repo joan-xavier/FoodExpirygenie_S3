@@ -105,6 +105,10 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 ## Recent Changes
 
 ```
+- June 24, 2025: Added CSV download functionality for food inventory export
+- June 24, 2025: Created requirements.txt file with all necessary dependencies
+- June 24, 2025: Generated comprehensive README.txt with local setup instructions
+- June 24, 2025: Fixed duplicate element issues in Calendar page
 - June 24, 2025: Migrated from PostgreSQL to CSV-only storage system
 - June 24, 2025: Implemented comprehensive CSV storage utilities with pandas
 - June 24, 2025: Updated all data access functions to use CSV backend
