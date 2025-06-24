@@ -451,8 +451,11 @@ def display_extracted_items(extracted_items, source_type):
                     include = st.checkbox("Include", 
                                         value=True, 
                                         key=f"{item_key}_include")
-                    if st.button("Remove", key=f"{item_key}_remove"):
-                        st.session_state[session_key].pop(i)
+                    if st.button("🗑️ Remove", key=f"{item_key}_remove", help="Remove this item"):
+                        # Remove item from session state
+                        current_items = st.session_state[session_key].copy()
+                        current_items.pop(i)
+                        st.session_state[session_key] = current_items
                         st.rerun()
                 
                 if include and name.strip():
@@ -673,9 +676,10 @@ def display_food_items():
             col1, col2, col3, col4, col5, col6 = st.columns([0.5, 2, 1.5, 1.5, 1, 0.5])
             
             with col1:
-                selected = st.checkbox("", 
+                selected = st.checkbox("Select", 
                     value=item['id'] in st.session_state.selected_items,
-                    key=f"select_item_{item['id']}")
+                    key=f"select_item_{item['id']}",
+                    label_visibility="collapsed")
                 if selected:
                     st.session_state.selected_items.add(item['id'])
                 else:
@@ -743,6 +747,25 @@ def edit_item_date(item_id, date_type, current_date):
     else:
         st.session_state[key] = True
         st.rerun()
+
+def delete_selected_items():
+    """Delete all selected items"""
+    if not hasattr(st.session_state, 'selected_items') or not st.session_state.selected_items:
+        st.warning("No items selected for deletion")
+        return
+    
+    success_count = 0
+    for item_id in st.session_state.selected_items:
+        if delete_food_item(item_id, st.session_state.current_user):
+            success_count += 1
+    
+    if success_count > 0:
+        st.success(f"Deleted {success_count} items")
+        st.session_state.selected_items.clear()
+        refresh_food_items()
+        st.rerun()
+    else:
+        st.error("Failed to delete selected items")
 
 def refresh_food_items():
     """Refresh food items from database"""
