@@ -251,12 +251,13 @@ def image_input_section():
     
     with tab1:
         st.markdown("#### 📄 Upload Receipt or Bill")
-        receipt_image = st.file_uploader(
-            "Choose receipt image...",
-            type=['png', 'jpg', 'jpeg'],
-            help="Upload a clear image of your grocery receipt",
-            key="receipt_uploader"
-        )
+        with st.container():
+            receipt_image = st.file_uploader(
+                "Choose receipt image...",
+                type=['png', 'jpg', 'jpeg'],
+                help="Upload a clear image of your grocery receipt",
+                key="receipt_uploader"
+            )
         
         if receipt_image is not None:
             try:
@@ -274,12 +275,13 @@ def image_input_section():
     
     with tab2:
         st.markdown("#### 📊 Barcode Scanning")
-        barcode_image = st.file_uploader(
-            "Choose barcode image...",
-            type=['png', 'jpg', 'jpeg'],
-            help="Upload an image of the product barcode",
-            key="barcode_uploader"
-        )
+        with st.container():
+            barcode_image = st.file_uploader(
+                "Choose barcode image...",
+                type=['png', 'jpg', 'jpeg'],
+                help="Upload an image of the product barcode",
+                key="barcode_uploader"
+            )
         
         if barcode_image is not None:
             try:
@@ -568,16 +570,14 @@ def display_food_items():
         st.info("📝 Your inventory is empty. Add some food items above!")
         return
     
-    # Convert to DataFrame
-    df = pd.DataFrame(st.session_state.food_items)
-    
-    # Add expiry status
+    # Create DataFrame for better display
+    items_df = pd.DataFrame(st.session_state.food_items)
     today = datetime.now().date()
     
+    # Add calculated fields
     def get_status(expiry_date_str):
         expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
         days_until_expiry = (expiry_date - today).days
-        
         if days_until_expiry < 0:
             return "🔴 Expired"
         elif days_until_expiry <= 3:
@@ -585,7 +585,14 @@ def display_food_items():
         else:
             return "🟢 Safe"
     
-    df['Status'] = df['expiry_date'].apply(get_status)
+    def get_days_left(expiry_date_str):
+        expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+        return (expiry_date - today).days
+    
+    items_df['Status'] = items_df['expiry_date'].apply(get_status)
+    items_df['Days_Left'] = items_df['expiry_date'].apply(get_days_left)
+    items_df['expiry_date_obj'] = pd.to_datetime(items_df['expiry_date'])
+    items_df['purchase_date_obj'] = pd.to_datetime(items_df['purchase_date'])
     
     # Enhanced filtering and sorting controls
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -598,8 +605,8 @@ def display_food_items():
     
     with col2:
         if view_type == "By Category":
-            category_filter = st.selectbox("Category:", 
-                ["All"] + list(items_df['category'].unique()) if len(items_df) > 0 else ["All"])
+            categories = ["All"] + list(items_df['category'].unique()) if len(items_df) > 0 else ["All"]
+            category_filter = st.selectbox("Category:", categories)
         else:
             sort_by = st.selectbox("Sort by:", 
                 ["expiry_date", "name", "category", "purchase_date", "Days_Left"])

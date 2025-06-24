@@ -254,7 +254,7 @@ def predict_expiry_date(user_email, food_name, purchase_date):
             # Get historical data for similar food items
             cur.execute("""
                 SELECT name, purchase_date, expiry_date,
-                       EXTRACT(days FROM expiry_date - purchase_date) as shelf_life
+                       (expiry_date - purchase_date) as shelf_life
                 FROM food_items 
                 WHERE user_email = %s 
                 AND LOWER(name) LIKE %s
@@ -266,7 +266,12 @@ def predict_expiry_date(user_email, food_name, purchase_date):
             
             if historical_data:
                 # Simple prediction: average shelf life from historical data
-                shelf_lives = [item['shelf_life'] for item in historical_data if item['shelf_life'] and item['shelf_life'] > 0]
+                shelf_lives = []
+                for item in historical_data:
+                    if item['shelf_life']:
+                        days = item['shelf_life'].days
+                        if days > 0:
+                            shelf_lives.append(days)
                 
                 if shelf_lives:
                     from statistics import mean
