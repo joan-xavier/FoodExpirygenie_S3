@@ -469,7 +469,7 @@ def display_extracted_items(extracted_items, source_type):
                     include = st.checkbox("Include", 
                                         value=True, 
                                         key=f"{item_key}_include")
-                    if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{hash(item.get('name', str(i)))}", help="Remove this item"):
+                    if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{hash(str(item)[:20])}", help="Remove this item"):
                         # Remove item from session state
                         if session_key in st.session_state and i < len(st.session_state[session_key]):
                             current_items = st.session_state[session_key].copy()
