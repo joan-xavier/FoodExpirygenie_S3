@@ -330,19 +330,16 @@ def create_expiry_timeline(items):
     
     return fig
 
-if __name__ == "__main__":
-    main()
-
-    # Sidebar navigation
-    with st.sidebar:
-        st.markdown("## 🧞‍♂️ ExpiryGenie")
-        if st.button("🏠 Home", use_container_width=True):
-            st.switch_page("pages/1_🏠_Landing.py")
-        if st.button("🚪 Logout", use_container_width=True):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.success("Logged out successfully!")
-            st.switch_page("pages/1_🏠_Landing.py")
+# Sidebar navigation
+with st.sidebar:
+    st.markdown("## 🧞‍♂️ ExpiryGenie")
+    if st.button("🏠 Home", use_container_width=True):
+        st.switch_page("pages/1_🏠_Landing.py")
+    if st.button("🚪 Logout", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.success("Logged out successfully!")
+        st.switch_page("pages/1_🏠_Landing.py")
 
 if __name__ == "__main__":
     main()
