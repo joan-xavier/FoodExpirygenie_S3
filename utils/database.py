@@ -269,7 +269,11 @@ def predict_expiry_date(user_email, food_name, purchase_date):
                 shelf_lives = []
                 for item in historical_data:
                     if item['shelf_life']:
-                        days = item['shelf_life'].days
+                        # Handle both interval and integer types
+                        if hasattr(item['shelf_life'], 'days'):
+                            days = item['shelf_life'].days
+                        else:
+                            days = int(item['shelf_life'])
                         if days > 0:
                             shelf_lives.append(days)
                 

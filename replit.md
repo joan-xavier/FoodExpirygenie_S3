@@ -104,11 +104,18 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - Image processing libraries
 - Network access for AI API calls
 
-## Changelog
+## Recent Changes
 
 ```
-Changelog:
-- June 24, 2025. Initial setup
+- June 24, 2025: Implemented comprehensive inline editing for all food item properties
+- June 24, 2025: Added advanced inventory filtering (Latest/Oldest/Expiring Soon/By Category)
+- June 24, 2025: Enhanced voice input with real speech recognition capabilities
+- June 24, 2025: Fixed PostgreSQL database query compatibility issues
+- June 24, 2025: Added AI-powered expiry date prediction using historical data
+- June 24, 2025: Implemented batch selection and deletion functionality
+- June 24, 2025: Added visual package status indicators (📦 packed, 📂 opened)
+- June 24, 2025: Fixed UI layout issues for image upload sections
+- June 24, 2025: Initial ExpiryGenie setup with multi-page Streamlit architecture
 ```
 
 ## User Preferences

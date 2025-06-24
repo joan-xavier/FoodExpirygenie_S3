@@ -6,7 +6,7 @@ from utils.food_data import get_food_categories, calculate_expiry_date
 from utils.gemini_client import process_voice_input, process_image_input
 from utils.voice_input import voice_to_text
 from utils.image_processing import extract_text_from_image, process_food_image
-from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date, update_food_item_date
+from utils.database import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date, update_food_item_date, update_food_item_details
 
 st.set_page_config(
     page_title="ExpiryGenie - Dashboard",
@@ -686,22 +686,78 @@ def display_food_items():
                     st.session_state.selected_items.discard(item['id'])
             
             with col2:
-                # Item name with package status icon
-                package_icon = "📦" if not item.get('opened', False) else "📂"
-                st.markdown(f"**{package_icon} {item['name']}**")
-                st.caption(f"{item['category']} • {item['quantity']}")
+                # Inline editing for name and details
+                edit_name_key = f"edit_name_{item['id']}"
+                if edit_name_key in st.session_state and st.session_state[edit_name_key]:
+                    new_name = st.text_input("Food Name:", value=item['name'], key=f"new_name_{item['id']}")
+                    new_quantity = st.text_input("Quantity:", value=item['quantity'], key=f"new_quantity_{item['id']}")
+                    new_opened = st.checkbox("Opened/Cooked", value=item.get('opened', False), key=f"new_opened_{item['id']}")
+                    col_save, col_cancel = st.columns(2)
+                    with col_save:
+                        if st.button("💾", key=f"save_name_{item['id']}", help="Save changes"):
+                            update_food_item_details(item['id'], new_name, new_quantity, new_opened)
+                            st.session_state[edit_name_key] = False
+                            refresh_food_items()
+                            st.rerun()
+                    with col_cancel:
+                        if st.button("❌", key=f"cancel_name_{item['id']}", help="Cancel"):
+                            st.session_state[edit_name_key] = False
+                            st.rerun()
+                else:
+                    package_icon = "📦" if not item.get('opened', False) else "📂"
+                    st.markdown(f"**{package_icon} {item['name']}**")
+                    st.caption(f"{item['category']} • {item['quantity']}")
+                    if st.button("✏️", key=f"edit_name_btn_{item['id']}", help="Edit name and details"):
+                        st.session_state[edit_name_key] = True
+                        st.rerun()
             
             with col3:
-                st.write(f"**Purchase:** {item['purchase_date']}")
-                # Edit purchase date
-                if st.button("✏️", key=f"edit_purchase_{item['id']}", help="Edit purchase date"):
-                    edit_item_date(item['id'], 'purchase_date', item['purchase_date'])
+                # Inline editing for purchase date
+                edit_purchase_key = f"edit_purchase_{item['id']}"
+                if edit_purchase_key in st.session_state and st.session_state[edit_purchase_key]:
+                    new_purchase = st.date_input("Purchase Date:", 
+                                               value=datetime.strptime(item['purchase_date'], '%Y-%m-%d').date(),
+                                               key=f"new_purchase_{item['id']}")
+                    col_save, col_cancel = st.columns(2)
+                    with col_save:
+                        if st.button("💾", key=f"save_purchase_{item['id']}", help="Save"):
+                            update_food_item_date(item['id'], 'purchase_date', new_purchase)
+                            st.session_state[edit_purchase_key] = False
+                            refresh_food_items()
+                            st.rerun()
+                    with col_cancel:
+                        if st.button("❌", key=f"cancel_purchase_{item['id']}", help="Cancel"):
+                            st.session_state[edit_purchase_key] = False
+                            st.rerun()
+                else:
+                    st.write(f"**Purchase:** {item['purchase_date']}")
+                    if st.button("✏️", key=f"edit_purchase_btn_{item['id']}", help="Edit purchase date"):
+                        st.session_state[edit_purchase_key] = True
+                        st.rerun()
             
             with col4:
-                st.write(f"**Expiry:** {item['expiry_date']}")
-                # Edit expiry date
-                if st.button("✏️", key=f"edit_expiry_{item['id']}", help="Edit expiry date"):
-                    edit_item_date(item['id'], 'expiry_date', item['expiry_date'])
+                # Inline editing for expiry date
+                edit_expiry_key = f"edit_expiry_{item['id']}"
+                if edit_expiry_key in st.session_state and st.session_state[edit_expiry_key]:
+                    new_expiry = st.date_input("Expiry Date:", 
+                                             value=datetime.strptime(item['expiry_date'], '%Y-%m-%d').date(),
+                                             key=f"new_expiry_{item['id']}")
+                    col_save, col_cancel = st.columns(2)
+                    with col_save:
+                        if st.button("💾", key=f"save_expiry_{item['id']}", help="Save"):
+                            update_food_item_date(item['id'], 'expiry_date', new_expiry)
+                            st.session_state[edit_expiry_key] = False
+                            refresh_food_items()
+                            st.rerun()
+                    with col_cancel:
+                        if st.button("❌", key=f"cancel_expiry_{item['id']}", help="Cancel"):
+                            st.session_state[edit_expiry_key] = False
+                            st.rerun()
+                else:
+                    st.write(f"**Expiry:** {item['expiry_date']}")
+                    if st.button("✏️", key=f"edit_expiry_btn_{item['id']}", help="Edit expiry date"):
+                        st.session_state[edit_expiry_key] = True
+                        st.rerun()
             
             with col5:
                 st.markdown(f"**{item['Status']}**")
@@ -718,35 +774,7 @@ def display_food_items():
                         refresh_food_items()
                         st.rerun()
 
-def edit_item_date(item_id, date_type, current_date):
-    """Handle inline date editing"""
-    key = f"edit_{date_type}_{item_id}"
-    
-    if key not in st.session_state:
-        st.session_state[key] = False
-    
-    if st.session_state[key]:
-        new_date = st.date_input(
-            f"New {date_type.replace('_', ' ').title()}:",
-            value=datetime.strptime(current_date, '%Y-%m-%d').date(),
-            key=f"date_input_{key}"
-        )
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Save", key=f"save_{key}"):
-                # Update in database
-                update_food_item_date(item_id, date_type, new_date)
-                st.session_state[key] = False
-                refresh_food_items()
-                st.rerun()
-        with col2:
-            if st.button("Cancel", key=f"cancel_{key}"):
-                st.session_state[key] = False
-                st.rerun()
-    else:
-        st.session_state[key] = True
-        st.rerun()
+
 
 def delete_selected_items():
     """Delete all selected items"""
