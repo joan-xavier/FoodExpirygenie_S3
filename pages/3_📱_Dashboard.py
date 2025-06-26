@@ -459,22 +459,22 @@ def display_extracted_items(extracted_items, source_type):
                         
                         # Show AI predicted expiry if available
                         if name and st.session_state.current_user:
-                        ai_predicted = predict_expiry_date(st.session_state.current_user, name, purchase_date)
-                        if ai_predicted:
-                            st.info(f"AI suggests: {ai_predicted.strftime('%Y-%m-%d')}")
+                            ai_predicted = predict_expiry_date(st.session_state.current_user, name, purchase_date)
+                            if ai_predicted:
+                                st.info(f"AI suggests: {ai_predicted}")
+                        
+                        expiry_date = st.date_input("Expiry Date",
+                                                  value=current_expiry,
+                                                  key=f"{item_key}_edate",
+                                                  help="Edit expiry date (AI prediction shown above)")
+                        opened = st.checkbox("Already opened", 
+                                           value=item.get('opened', False),
+                                           key=f"{item_key}_opened")
                     
-                    expiry_date = st.date_input("Expiry Date",
-                                              value=current_expiry,
-                                              key=f"{item_key}_edate",
-                                              help="Edit expiry date (AI prediction shown above)")
-                    opened = st.checkbox("Already opened", 
-                                       value=item.get('opened', False),
-                                       key=f"{item_key}_opened")
-                
-                with col4:
-                    include = st.checkbox("Include", 
-                                        value=True, 
-                                        key=f"{item_key}_include")
+                    with col4:
+                        include = st.checkbox("Include", 
+                                            value=True, 
+                                            key=f"{item_key}_include")
                     if st.button("🗑️ Remove", key=f"remove_{source_type}_{i}_{abs(hash(str(item) + str(i)))}", help="Remove this item"):
                         # Remove item from session state
                         if session_key in st.session_state and i < len(st.session_state[session_key]):
