@@ -21,8 +21,7 @@ pytesseract>=0.3.13
 speechrecognition>=3.14.3
 pyaudio>=0.2.14
 
-# Database Support (optional - for PostgreSQL migration compatibility)
-psycopg2-binary>=2.9.0
+# Database Support - SQLite is built into Python, no additional dependencies needed
 
 # Additional Utilities
 Pillow>=10.0.0

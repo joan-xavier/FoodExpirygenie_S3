@@ -134,11 +134,11 @@ Statistics:
 
 DATA STORAGE
 ------------
-ExpiryGenie uses CSV files for data storage:
-- data/users.csv: User account information
-- data/food_items.csv: Food inventory data
+ExpiryGenie uses SQLite for serverless data storage:
+- data/expirygenie.db: SQLite database file containing all user and food data
+- CSV export functionality available for downloading inventory data
 
-No database setup required - all data is stored locally in CSV format.
+No database server setup required - SQLite is file-based and serverless.
 
 TROUBLESHOOTING
 ---------------

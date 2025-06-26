@@ -19,9 +19,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ### Backend Architecture
 - **Language**: Python 3.11
-- **Database**: CSV-based storage with pandas for data management
+- **Database**: SQLite for serverless data storage with CSV export capability
 - **Session Management**: Streamlit session state for user data persistence
-- **File Storage**: CSV files for structured data storage (users.csv, food_items.csv)
+- **File Storage**: SQLite database file (data/expirygenie.db) with CSV export functionality
 
 ### Data Processing Components
 - **OCR**: Tesseract for text extraction from images
@@ -45,8 +45,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - **Smart Categorization**: Predefined food categories (Grocery, Dairy, Meat & Poultry, etc.)
 
 ### Data Storage Schema
-- **Users CSV**: id, email, name, password_hash, money_saved, created_at
-- **Food Items CSV**: id, user_email, name, category, purchase_date, expiry_date, quantity, opened, added_method
+- **Users Table**: id, email, name, password_hash, money_saved, created_at
+- **Food Items Table**: id, user_email, name, category, purchase_date, expiry_date, quantity, opened, added_method
+- **CSV Export**: All data can be exported to CSV format with calculated fields
 
 ### Calendar Visualization
 - Color-coded calendar view showing expiry dates
@@ -60,10 +61,11 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ## Data Flow
 
-1. **User Authentication**: Login → Session establishment → CSV user verification
-2. **Food Item Addition**: Input (Manual/Voice/Image) → AI Processing → CSV storage
-3. **Calendar View**: CSV data retrieval → Date processing → Visual rendering
-4. **Statistics**: Data aggregation from CSV → Chart generation → Dashboard display
+1. **User Authentication**: Login → Session establishment → SQLite user verification
+2. **Food Item Addition**: Input (Manual/Voice/Image) → AI Processing → SQLite storage
+3. **Calendar View**: SQLite data retrieval → Date processing → Visual rendering
+4. **Statistics**: Data aggregation from SQLite → Chart generation → Dashboard display
+5. **CSV Export**: SQLite data → CSV format → Download functionality
 
 ## External Dependencies
 
@@ -105,11 +107,13 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 ## Recent Changes
 
 ```
+- June 24, 2025: Migrated database.py from PostgreSQL to SQLite for serverless deployment
+- June 24, 2025: Added CSV export functionality directly in database utilities
+- June 24, 2025: Enhanced SQLite schema with proper data types and constraints
 - June 24, 2025: Added CSV download functionality for food inventory export
 - June 24, 2025: Created requirements.txt file with all necessary dependencies
 - June 24, 2025: Generated comprehensive README.txt with local setup instructions
 - June 24, 2025: Fixed duplicate element issues in Calendar page
-- June 24, 2025: Migrated from PostgreSQL to CSV-only storage system
 - June 24, 2025: Implemented comprehensive CSV storage utilities with pandas
 - June 24, 2025: Updated all data access functions to use CSV backend
 - June 24, 2025: Simplified deployment by removing database dependencies

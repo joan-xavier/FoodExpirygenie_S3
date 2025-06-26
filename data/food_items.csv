@@ -2,8 +2,6 @@ id,user_email,name,category,purchase_date,expiry_date,quantity,opened,added_meth
 1,joanjoean@gmail.com,Banana,Fruits,2025-06-24,2025-06-28,12.0,False,manual
 2,joanjoean@gmail.com,ONION RED 2LB,Vegetables,2025-05-03,2025-07-03,3.0,False,receipt
 3,joanjoean@gmail.com,DEEP COCONUT SLICES12OZ,Pantry,2025-05-03,2026-05-03,1.0,False,receipt
-4,joanjoean@gmail.com,GAZAB KIDENY BEANS 2 LB,Pantry,2025-05-03,2027-05-03,1.0,False,receipt
-6,joanjoean@gmail.com,ANAND SESAME LADU 200G,Snacks,2025-05-03,2025-08-03,1.0,False,receipt
 7,joanjoean@gmail.com,RIMPY'S SESAME NATURAL,Pantry,2025-05-03,2026-11-03,1.0,False,receipt
 8,joanjoean@gmail.com,RIMPY'S CLOVES WHOLE,Condiments,2025-05-03,2028-05-03,1.0,False,receipt
 11,joanjoean@gmail.com,MOT LIME GINGER PKL,Condiments,2025-05-03,2026-11-03,1.0,False,receipt
@@ -11,8 +9,6 @@ id,user_email,name,category,purchase_date,expiry_date,quantity,opened,added_meth
 16,joanjoean@gmail.com,EGG PLANT INDIAN,Vegetables,2025-05-03,2025-06-27,0.43,False,receipt
 17,joanjoean@gmail.com,MINT,Vegetables,2025-05-03,2025-06-28,1.0,False,receipt
 22,joanjoean@gmail.com,OKRA,Vegetables,2025-05-03,2025-06-29,1.29,False,receipt
-23,joanjoean@gmail.com,BRINJAL BHARTA,Pantry,2025-05-03,2026-05-03,1.0,False,receipt
-24,joanjoean@gmail.com,DESI GHEE 16 OZ,Dairy,2025-05-03,2026-05-03,1.0,False,receipt
 25,joanjoean@gmail.com,LAXMI SUJI,Pantry,2025-05-03,2026-11-03,1.0,False,receipt
 26,joanjoean@gmail.com,LAXMI ATTA 10LB,Pantry,2025-05-03,2026-02-03,1.0,False,receipt
 27,joanjoean@gmail.com,MAAZA MANGO 1L,Beverages,2025-05-03,2026-02-03,1.0,False,receipt
@@ -21,10 +17,12 @@ id,user_email,name,category,purchase_date,expiry_date,quantity,opened,added_meth
 30,joanjoean@gmail.com,CHIKKI,Snacks,2025-05-03,2025-05-07,1.0,False,receipt
 31,joanjoean@gmail.com,LAXMI MOONG,Pantry,2025-05-03,2027-05-03,1.0,False,receipt
 32,joanjoean@gmail.com,LAXMI CHANA,Pantry,2025-05-03,2027-05-03,1.0,False,receipt
-33,joanjoean@gmail.com,BROWN POHA,Pantry,2025-05-03,2026-11-03,1.0,False,receipt
-34,joanjoean@gmail.com,SWAD BUTTER,Dairy,2025-05-03,2025-11-03,1.0,False,receipt
 35,joanjoean@gmail.com,DESI MASALA,Condiments,2025-05-03,2026-11-03,1.0,False,receipt
 37,joanjoean@gmail.com,RED BADAAM,Snacks,2025-05-03,2026-02-03,1.0,False,receipt
 40,joanjoean@gmail.com,DHANIAL POWDER 14 OZ,Condiments,2025-05-03,2026-11-03,1.0,False,receipt
 41,joanjoean@gmail.com,SUJATA MAIDA,Pantry,2025-05-03,2026-02-03,1.0,False,receipt
 42,joanjoean@gmail.com,DESI MIRCH,Condiments,2025-05-03,2026-11-03,1.0,False,receipt
+43,joanjoean@gmail.com,Zucchini,Grocery,2025-06-24,2025-07-04,2 pieces,False,food_photo
+44,joanjoean@gmail.com,Eggplant,Grocery,2025-06-24,2025-07-04,1 piece,False,food_photo
+46,joanjoean@gmail.com,Tomato,Grocery,2025-06-24,2025-07-01,1 piece,False,food_photo
+47,joanjoean@gmail.com,Garlic,Grocery,2025-06-24,2025-07-24,1 bulb,False,food_photo
