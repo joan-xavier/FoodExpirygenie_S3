@@ -433,32 +433,32 @@ def display_extracted_items(extracted_items, source_type):
                 item_key = f"{source_type}_{i}_{int(time.time())}_{random.randint(1000, 9999)}_{item.get('name', 'item').replace(' ', '_')}"
                 
                 with st.expander(f"📦 {item.get('name', 'Unknown Item')}", expanded=False):
-                col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
-                
-                with col1:
-                    name = st.text_input("Food Name", 
-                                       value=item.get('name', ''), 
-                                       key=f"{item_key}_name")
-                    category = st.selectbox("Category", 
-                                          get_food_categories(),
-                                          index=get_food_categories().index(item.get('category', 'Grocery')) if item.get('category') in get_food_categories() else 0,
-                                          key=f"{item_key}_cat")
-                
-                with col2:
-                    purchase_date = st.date_input("Purchase Date",
-                                                value=datetime.strptime(item.get('purchase_date', datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
-                                                key=f"{item_key}_pdate",
-                                                help="Edit purchase date")
-                    quantity = st.text_input("Quantity", 
-                                           value=item.get('quantity', '1 unit'), 
-                                           key=f"{item_key}_qty")
-                
-                with col3:
-                    # Use AI prediction for extracted items too
-                    current_expiry = datetime.strptime(item.get('expiry_date', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+                    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
                     
-                    # Show AI predicted expiry if available
-                    if name and st.session_state.current_user:
+                    with col1:
+                        name = st.text_input("Food Name", 
+                                           value=item.get('name', ''), 
+                                           key=f"{item_key}_name")
+                        category = st.selectbox("Category", 
+                                              get_food_categories(),
+                                              index=get_food_categories().index(item.get('category', 'Grocery')) if item.get('category') in get_food_categories() else 0,
+                                              key=f"{item_key}_cat")
+                    
+                    with col2:
+                        purchase_date = st.date_input("Purchase Date",
+                                                    value=datetime.strptime(item.get('purchase_date', datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date(),
+                                                    key=f"{item_key}_pdate",
+                                                    help="Edit purchase date")
+                        quantity = st.text_input("Quantity", 
+                                               value=item.get('quantity', '1 unit'), 
+                                               key=f"{item_key}_qty")
+                    
+                    with col3:
+                        # Use AI prediction for extracted items too
+                        current_expiry = datetime.strptime(item.get('expiry_date', (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+                        
+                        # Show AI predicted expiry if available
+                        if name and st.session_state.current_user:
                         ai_predicted = predict_expiry_date(st.session_state.current_user, name, purchase_date)
                         if ai_predicted:
                             st.info(f"AI suggests: {ai_predicted.strftime('%Y-%m-%d')}")
