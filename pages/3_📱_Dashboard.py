@@ -233,6 +233,47 @@ def process_voice_text(voice_text):
         except Exception as e:
             st.error(f"❌ Error processing voice input: {str(e)}")
 
+def text_input_section():
+    st.markdown("#### 💬 Natural Language Text Input")
+    st.markdown("Describe the food items you bought in natural language")
+    
+    # Text input for natural language
+    user_text = st.text_area(
+        "Describe your food items:",
+        placeholder="Example: I bought 2 apples, 1 loaf of bread, and a carton of milk today",
+        height=100,
+        key="natural_language_input"
+    )
+    
+    if st.button("🔍 Process Text", type="primary", key="process_text") and user_text.strip():
+        process_text_input(user_text)
+    
+    st.markdown("💡 **Tips for better text processing:**")
+    st.markdown("- Include quantities and food names")
+    st.markdown("- Example: 'I bought two apples, one bread, and milk'")
+    st.markdown("- You can mention purchase dates or expiry information")
+
+def process_text_input(text_input):
+    """Process natural language text input to extract food items"""
+    try:
+        with st.spinner("🤖 Processing your text input..."):
+            # Use Gemini AI to process text input
+            extracted_items = process_voice_input(text_input)  # Same function works for text
+            
+            if extracted_items:
+                st.success(f"✅ Found {len(extracted_items)} items from your text!")
+                
+                # Store in session state for confirmation
+                st.session_state.text_extracted_items = extracted_items
+                
+                # Display items for confirmation
+                display_extracted_items(extracted_items, "text")
+            else:
+                st.warning("🤔 No food items found. Try describing your items more clearly.")
+                
+    except Exception as e:
+        st.error(f"❌ Error processing text input: {str(e)}")
+
 def image_input_section():
     st.markdown("### 📸 Image/OCR Scanning")
     
