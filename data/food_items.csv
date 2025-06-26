@@ -26,3 +26,18 @@ id,user_email,name,category,purchase_date,expiry_date,quantity,opened,added_meth
 44,joanjoean@gmail.com,Eggplant,Grocery,2025-06-24,2025-07-04,1 piece,False,food_photo
 46,joanjoean@gmail.com,Tomato,Grocery,2025-06-24,2025-07-01,1 piece,False,food_photo
 47,joanjoean@gmail.com,Garlic,Grocery,2025-06-24,2025-07-24,1 bulb,False,food_photo
+48,monica123@gmail.com,Red Bell Pepper,Grocery,2025-06-26,2025-07-10,1 piece,False,food_photo
+49,monica123@gmail.com,Yellow Bell Pepper,Grocery,2025-06-26,2025-07-10,1 piece,False,food_photo
+50,monica123@gmail.com,Broccoli,Grocery,2025-06-26,2025-07-03,1 head,False,food_photo
+51,monica123@gmail.com,Lamb's Lettuce,Grocery,2025-06-26,2025-07-02,1 bunch,False,food_photo
+52,monica123@gmail.com,Green Bell Pepper,Grocery,2025-06-26,2025-07-10,1 piece,False,food_photo
+53,monica123@gmail.com,Red Onion,Grocery,2025-06-26,2025-07-26,1 piece,False,food_photo
+54,monica123@gmail.com,Carrot,Grocery,2025-06-26,2025-07-17,1 piece,False,food_photo
+55,monica123@gmail.com,Tomato,Grocery,2025-06-26,2025-07-03,1 piece,False,food_photo
+56,monica123@gmail.com,Spinach,Grocery,2025-06-26,2025-07-02,1 bunch,False,food_photo
+57,monica123@gmail.com,Avocado,Grocery,2025-06-26,2025-06-27,1 half,False,food_photo
+58,monica123@gmail.com,Cucumber,Grocery,2025-06-26,2025-06-27,1 slice,False,food_photo
+59,monica123@gmail.com,Zucchini,Grocery,2025-06-26,2025-07-03,2 pieces,False,food_photo
+60,monica123@gmail.com,Basil,Grocery,2025-06-26,2025-07-02,1 bunch,False,food_photo
+61,monica123@gmail.com,Orange Bell Pepper,Grocery,2025-06-26,2025-07-10,1 piece,False,food_photo
+62,monica123@gmail.com,Red Bell Pepper,Grocery,2025-06-26,2025-07-10,1 piece,False,food_photo

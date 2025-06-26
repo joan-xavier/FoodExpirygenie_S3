@@ -281,7 +281,11 @@ def image_input_section():
     
     with tab2:
         st.markdown("#### 📊 Barcode Scanning")
-        with st.container():
+        
+        # Create two columns for better layout
+        upload_col, display_col = st.columns([1, 1])
+        
+        with upload_col:
             barcode_image = st.file_uploader(
                 "Choose barcode image...",
                 type=['png', 'jpg', 'jpeg'],
@@ -289,25 +293,28 @@ def image_input_section():
                 key="barcode_uploader"
             )
         
-        if barcode_image is not None:
-            try:
+            if barcode_image is not None:
+                try:
+                    if st.button("🔍 Scan Barcode", type="primary", key="process_barcode"):
+                        with st.spinner("Processing barcode image..."):
+                            extracted_items = process_barcode_image(barcode_image)
+                            if extracted_items:
+                                st.session_state.extracted_items_barcode = extracted_items
+                                st.success(f"Found {len(extracted_items)} items!")
+                                st.rerun()
+                            else:
+                                st.error("No items found from barcode")
+                except Exception as e:
+                    st.error(f"Error processing image: {str(e)}")
+        
+        with display_col:
+            if barcode_image is not None:
                 st.image(barcode_image, caption="Uploaded Barcode", use_container_width=True)
-                
-                if st.button("🔍 Scan Barcode", type="primary", key="process_barcode"):
-                    with st.spinner("Processing barcode image..."):
-                        extracted_items = process_barcode_image(barcode_image)
-                        if extracted_items:
-                            st.session_state.extracted_items_barcode = extracted_items
-                            st.success(f"Found {len(extracted_items)} items!")
-                            st.rerun()
-                        else:
-                            st.error("No items found from barcode")
-            except Exception as e:
-                st.error(f"Error displaying image: {str(e)}")
     
-    # Display extracted items only once, outside the image upload section
+    # Display extracted items in full width below
     if "extracted_items_barcode" in st.session_state and st.session_state.extracted_items_barcode:
         st.markdown("---")
+        st.markdown("### 📊 Extracted Items from Barcode")
         display_extracted_items(st.session_state.extracted_items_barcode, "barcode")
     
     with tab3:
@@ -415,13 +422,27 @@ def display_extracted_items(extracted_items, source_type):
         confirmed_items = []
         
         st.markdown("### Review and Edit Items Before Adding:")
+        st.markdown("---")
         
-        for i, item in enumerate(current_items):
-            # Create unique key using timestamp to avoid duplicates
-            import time
-            item_key = f"{source_type}_{i}_{int(time.time())}_{item.get('name', 'item')}"
+        # Add better container for scrolling with max height
+        with st.container():
+            # Add CSS for better scrolling
+            st.markdown("""
+            <style>
+            .stExpander > div[data-testid="stExpanderDetails"] {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             
-            with st.expander(f"📦 {item.get('name', 'Unknown Item')}", expanded=True):
+            for i, item in enumerate(current_items):
+                # Create unique key using timestamp and random number to avoid duplicates
+                import time
+                import random
+                item_key = f"{source_type}_{i}_{int(time.time())}_{random.randint(1000, 9999)}_{item.get('name', 'item').replace(' ', '_')}"
+                
+                with st.expander(f"📦 {item.get('name', 'Unknown Item')}", expanded=False):
                 col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
                 
                 with col1:
