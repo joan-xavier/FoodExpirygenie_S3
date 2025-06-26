@@ -22,47 +22,37 @@ def check_authentication():
 def main():
     check_authentication()
     
-    st.markdown("# 📱 ExpiryGenie Dashboard")
-    st.markdown(f"Welcome back, **{st.session_state.current_user}**! 🎉")
+    st.markdown("# 🧞‍♂️ ExpiryGenie Dashboard")
+    st.markdown("### Smart food expiry tracking to reduce waste and save money")
     
     # Always load food items on page load
     if 'food_items' not in st.session_state or not st.session_state.food_items:
         refresh_food_items()
     
-    # Sidebar navigation and controls
-    with st.sidebar:
-        st.markdown("## 🧞‍♂️ ExpiryGenie")
-        
-        if st.button("🏠 Home", use_container_width=True):
-            st.switch_page("pages/1_🏠_Landing.py")
-            
-        if st.button("🚪 Logout", use_container_width=True):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.success("Logged out successfully!")
-            st.switch_page("pages/1_🏠_Landing.py")
-        
-        st.markdown("## 🎯 Add Food Items")
-        input_method = st.selectbox(
-            "Choose Input Method:",
-            ["📝 Manual Entry", "🎤 Voice Input", "📸 Image/OCR Scan"]
-        )
+    # Add food items section below title for better visibility
+    st.markdown("## 📥 Add Food Items")
     
-    # Main content area - full width for input methods
-    if input_method == "📝 Manual Entry":
+    # Create tabs for different input methods
+    tab1, tab2, tab3 = st.tabs(["📝 Manual Entry", "💬 Text Input", "📸 Image Upload"])
+    
+    with tab1:
         manual_entry_section()
-    elif input_method == "🎤 Voice Input":
-        voice_input_section()
-    elif input_method == "📸 Image/OCR Scan":
+    
+    with tab2:
+        text_input_section()
+    
+    with tab3:
         image_input_section()
     
-    # Display current food items
     st.markdown("---")
-    display_food_items()
     
-    # Quick stats section moved below
-    st.markdown("---")
+    # Quick stats section
     quick_stats_section()
+    
+    st.markdown("---")
+    
+    # Display food items
+    display_food_items()
 
 def manual_entry_section():
     st.markdown("### 📝 Manual Food Entry")
@@ -878,6 +868,21 @@ def refresh_food_items():
     else:
         print("No current user found, setting empty food items")
         st.session_state.food_items = []
+
+# Sidebar navigation
+with st.sidebar:
+    st.markdown("## 🧞‍♂️ ExpiryGenie")
+    if st.button("🏠 Home", use_container_width=True):
+        st.switch_page("pages/1_🏠_Landing.py")
+    if st.button("📅 Calendar", use_container_width=True):
+        st.switch_page("pages/4_📅_Calendar.py")
+    if st.button("📊 Statistics", use_container_width=True):
+        st.switch_page("pages/5_📊_Stats.py")
+    if st.button("🚪 Logout", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.success("Logged out successfully!")
+        st.switch_page("pages/1_🏠_Landing.py")
 
 if __name__ == "__main__":
     main()

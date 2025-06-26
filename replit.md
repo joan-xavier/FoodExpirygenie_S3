@@ -107,6 +107,10 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 ## Recent Changes
 
 ```
+- June 26, 2025: Replaced voice input with text input for better reliability
+- June 26, 2025: Moved 'Add food items' section below dashboard title for better visibility
+- June 26, 2025: Improved image upload layout with side-by-side design and better scrolling
+- June 26, 2025: Fixed duplicate element key errors in image processing sections
 - June 24, 2025: Migrated database.py from PostgreSQL to SQLite for serverless deployment
 - June 24, 2025: Added CSV export functionality directly in database utilities
 - June 24, 2025: Enhanced SQLite schema with proper data types and constraints
