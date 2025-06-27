@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 # S3 storage handles password hashing internally
-from utils.s3_storage import create_user, authenticate_user, get_user_by_email
+from utils.s3_storage import create_user, authenticate_user, get_user_by_email, hash_password, verify_password
 
 st.set_page_config(
     page_title="ExpiryGenie - Authentication",
@@ -40,10 +40,9 @@ def main():
                 if not email or not password:
                     st.error("❌ Please fill in all fields")
                 else:
-                    password_hash = hash_password(password)
-                    success, user_data = authenticate_user(email, password_hash)
+                    user_data = authenticate_user(email, password)
                     
-                    if success and user_data:
+                    if user_data:
                         st.session_state.logged_in = True
                         st.session_state.current_user = email
                         st.session_state.food_items = []
@@ -86,8 +85,7 @@ def main():
                     st.error("❌ Please accept the terms and conditions")
                 else:
                     # Create new user in database
-                    password_hash = hash_password(password)
-                    success, message = create_user(name, email, password_hash)
+                    success = create_user(name, email, password)
                     
                     if success:
                         # Auto login
@@ -100,7 +98,7 @@ def main():
                         st.balloons()
                         st.switch_page("pages/3_📱_Dashboard.py")
                     else:
-                        st.error(f"❌ {message}")
+                        st.error("❌ Failed to create account. Email might already exist.")
     
     # Reset Password Tab
     with tab3:

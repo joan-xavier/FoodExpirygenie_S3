@@ -835,9 +835,9 @@ def display_food_items():
                 button_col1, button_col2, button_col3 = st.columns(3)
                 with button_col1:
                     if st.button("💾 Save Changes", key=f"save_{item['id']}", type="primary"):
-                        success1 = update_food_item_details(item['id'], new_name, new_quantity, new_opened)
-                        success2 = update_food_item_date(item['id'], 'purchase_date', new_purchase_date)
-                        success3 = update_food_item_date(item['id'], 'expiry_date', new_expiry_date)
+                        success1 = update_food_item_details(item['id'], st.session_state.current_user, new_name, new_quantity, new_opened)
+                        success2 = update_food_item_date(item['id'], st.session_state.current_user, 'purchase_date', new_purchase_date)
+                        success3 = update_food_item_date(item['id'], st.session_state.current_user, 'expiry_date', new_expiry_date)
                         
                         if success1 and success2 and success3:
                             st.success("All changes saved!")

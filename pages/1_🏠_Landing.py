@@ -105,7 +105,7 @@ def main():
     
     with testimonial_col1:
         st.markdown("""
-        > "ExpiryGenie saved me $200 last month! The voice input is so convenient when I'm unpacking groceries."
+        > "ExpiryGenie saved me $200 last month! The photo input is so convenient when I'm unpacking groceries."
         
         **- Sarah M., Working Mom**
         ⭐⭐⭐⭐⭐
@@ -132,11 +132,11 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Happy Users", "50,000+")
+        st.metric("Happy Users", "5000+")
     with col2:
-        st.metric("Food Items Tracked", "2M+")
+        st.metric("Food Items Tracked", "1000+")
     with col3:
-        st.metric("Money Saved", "$5M+")
+        st.metric("Money Saved", "$50+")
     with col4:
         st.metric("Waste Reduced", "100 Tons")
     
