@@ -2,8 +2,8 @@ import streamlit as st
 import hashlib
 import json
 import os
-from utils.auth import hash_password, verify_password
-from utils.database import create_user, authenticate_user, get_user_by_email
+# S3 storage handles password hashing internally
+from utils.s3_storage import create_user, authenticate_user, get_user_by_email
 
 st.set_page_config(
     page_title="ExpiryGenie - Authentication",

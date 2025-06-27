@@ -6,7 +6,7 @@ from utils.food_data import get_food_categories, calculate_expiry_date
 from utils.gemini_client import process_voice_input, process_image_input
 from utils.voice_input import voice_to_text
 from utils.image_processing import extract_text_from_image, process_food_image
-from utils.csv_storage import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date, update_food_item_date, update_food_item_details
+from utils.s3_storage import add_food_item, get_user_food_items, delete_food_item, delete_expired_items, predict_expiry_date, update_food_item_date, update_food_item_details
 
 st.set_page_config(
     page_title="ExpiryGenie - Dashboard",

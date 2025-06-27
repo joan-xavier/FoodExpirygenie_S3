@@ -19,9 +19,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ### Backend Architecture
 - **Language**: Python 3.11
-- **Database**: SQLite for serverless data storage with CSV export capability
+- **Database**: AWS S3 for cloud data storage with JSON format
 - **Session Management**: Streamlit session state for user data persistence
-- **File Storage**: SQLite database file (data/expirygenie.db) with CSV export functionality
+- **File Storage**: S3 bucket with structured JSON files for users and food items
 
 ### Data Processing Components
 - **OCR**: Tesseract for text extraction from images
@@ -45,9 +45,10 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 - **Smart Categorization**: Predefined food categories (Grocery, Dairy, Meat & Poultry, etc.)
 
 ### Data Storage Schema
-- **Users Table**: id, email, name, password_hash, money_saved, created_at
-- **Food Items Table**: id, user_email, name, category, purchase_date, expiry_date, quantity, opened, added_method
-- **CSV Export**: All data can be exported to CSV format with calculated fields
+- **S3 Structure**: 
+  - `data/users.json` - All user accounts with email, name, password_hash, money_saved
+  - `data/food_items/{user_hash}.json` - Individual user food inventories
+- **CSV Export**: S3 data can be exported to CSV format with calculated fields
 
 ### Calendar Visualization
 - Color-coded calendar view showing expiry dates
@@ -61,11 +62,11 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ## Data Flow
 
-1. **User Authentication**: Login → Session establishment → SQLite user verification
-2. **Food Item Addition**: Input (Manual/Voice/Image) → AI Processing → SQLite storage
-3. **Calendar View**: SQLite data retrieval → Date processing → Visual rendering
-4. **Statistics**: Data aggregation from SQLite → Chart generation → Dashboard display
-5. **CSV Export**: SQLite data → CSV format → Download functionality
+1. **User Authentication**: Login → Session establishment → S3 user verification
+2. **Food Item Addition**: Input (Manual/Text/Image) → AI Processing → S3 JSON storage
+3. **Calendar View**: S3 data retrieval → Date processing → Visual rendering
+4. **Statistics**: Data aggregation from S3 → Chart generation → Dashboard display
+5. **CSV Export**: S3 JSON data → CSV format → Download functionality
 
 ## External Dependencies
 
@@ -97,6 +98,10 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 
 ### Environment Variables
 - `GEMINI_API_KEY` - Google AI service authentication
+- `AWS_ACCESS_KEY_ID` - AWS access key for S3
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key for S3
+- `AWS_REGION` - AWS region (e.g., us-east-1)
+- `S3_BUCKET_NAME` - S3 bucket name for data storage
 
 ### Resource Requirements
 - File system storage for CSV files
@@ -107,6 +112,9 @@ ExpiryGenie is a Streamlit-based web application designed to help users track fo
 ## Recent Changes
 
 ```
+- June 27, 2025: Migrated from SQLite/CSV to AWS S3 cloud storage for better scalability
+- June 27, 2025: Removed unnecessary local storage files and cleaned up folder structure
+- June 27, 2025: Created comprehensive S3 setup instructions and environment configuration
 - June 26, 2025: Replaced voice input with text input for better reliability
 - June 26, 2025: Moved 'Add food items' section below dashboard title for better visibility
 - June 26, 2025: Improved image upload layout with side-by-side design and better scrolling

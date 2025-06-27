@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from collections import Counter
-from utils.csv_storage import get_user_food_items
+from utils.s3_storage import get_user_food_items
 
 st.set_page_config(
     page_title="ExpiryGenie - Statistics",

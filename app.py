@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import os
-from utils.csv_storage import init_csv_storage
+from utils.s3_storage import s3_storage
 
 # Configure page settings
 st.set_page_config(
@@ -14,10 +14,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize database on app start
+# Initialize S3 storage on app start
 if 'db_initialized' not in st.session_state:
-    if init_csv_storage():
-        st.session_state.db_initialized = True
+    st.session_state.db_initialized = True
 
 # Initialize session state
 if 'user_data' not in st.session_state:
@@ -66,22 +65,9 @@ if st.session_state.logged_in:
 
 # Main app content
 def main():
-    # Check if user is logged in and load their food items from database
-    if st.session_state.logged_in and st.session_state.current_user:
-        db_items = get_user_food_items(st.session_state.current_user)
-        # Convert database items to session state format
-        st.session_state.food_items = []
-        for item in db_items:
-            st.session_state.food_items.append({
-                'id': item['id'],
-                'name': item['name'],
-                'category': item['category'],
-                'purchase_date': item['purchase_date'].strftime('%Y-%m-%d'),
-                'expiry_date': item['expiry_date'].strftime('%Y-%m-%d'),
-                'quantity': item['quantity'],
-                'opened': item['opened'],
-                'added_method': item['added_method']
-            })
+    # Initialize S3 storage connection
+    if not hasattr(st.session_state, 's3_initialized'):
+        st.session_state.s3_initialized = True
     
     # Redirect to landing page by default
     if not st.session_state.logged_in:
