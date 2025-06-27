@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+*.sqlite3
+foodwise_data.db
+*.log
+.DS_Store
