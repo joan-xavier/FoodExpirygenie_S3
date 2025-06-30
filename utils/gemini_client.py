@@ -2,8 +2,8 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+from google.generativeai import types
 import streamlit as st
 
 # Initialize Gemini client
