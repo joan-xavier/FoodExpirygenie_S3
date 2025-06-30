@@ -191,3 +191,19 @@ NOTES
 - All user data is stored locally - no external database required
 
 Happy food tracking with ExpiryGenie!
+## Security Notes 
+
+- Passwords are securely hashed using SHA-256
+- Never share your API key
+- Keep your `.env` file private
+
+## Troubleshooting 
+
+- If you get API errors, verify your API key in the `.env` file
+- Make sure all dependencies are installed correctly
+- Check if your resume file is in PDF or TXT format
+- Ensure you have a stable internet connection
+
+## Contributing 🤝
+
+Feel free to fork this repository and submit pull requests. For major changes, please open an issue first to discuss what you would like to change.
