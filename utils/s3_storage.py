@@ -12,6 +12,8 @@ from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional
 from botocore.exceptions import ClientError, NoCredentialsError
 import io
+from dotenv import load_dotenv
+load_dotenv()
 
 class S3Storage:
     def __init__(self):
