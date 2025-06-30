@@ -4,7 +4,7 @@ from datetime import datetime
 import google.generativeai as genai
 import streamlit as st
 
-#  Gemini model setup
+#  Gemini model setup --
 def get_gemini_model(model_name="gemini-2.5-flash"):
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
