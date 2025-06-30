@@ -19,11 +19,15 @@ pytesseract>=0.3.13
 
 # Audio and Speech Recognition
 speechrecognition>=3.14.3
+SpeechRecognition
+
 pyaudio>=0.2.14
 
 # Database Support - SQLite is built into Python, no additional dependencies needed
 
 # Additional Utilities
+opencv-python
+pytesseract
 Pillow>=10.0.0
 numpy>=1.24.0
 streamlit-authenticator
