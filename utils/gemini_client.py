@@ -4,7 +4,7 @@ from datetime import datetime
 import google.generativeai as genai
 import streamlit as st
 
-# ✅ Gemini model setup
+#  Gemini model setup
 def get_gemini_model(model_name="gemini-2.5-flash"):
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -12,7 +12,7 @@ def get_gemini_model(model_name="gemini-2.5-flash"):
     genai.configure(api_key=api_key)
     return genai.GenerativeModel(model_name)
 
-# ✅ Process voice input
+#  Process voice input
 def process_voice_input(voice_text):
     try:
         model = get_gemini_model()
@@ -44,7 +44,7 @@ def process_voice_input(voice_text):
         st.error(f"Error processing voice input: {str(e)}")
         return []
 
-# ✅ Process image input
+#  Process image input
 def process_image_input(image_file, image_type):
     try:
         model = get_gemini_model()
@@ -78,7 +78,7 @@ def process_image_input(image_file, image_type):
         st.error(f"Error processing image: {str(e)}")
         return []
 
-# ✅ Suggest recipes
+#  Suggest recipes
 def get_recipe_suggestions(expiring_items):
     if not expiring_items:
         return []
@@ -103,7 +103,7 @@ def get_recipe_suggestions(expiring_items):
         st.error(f"Error getting recipe suggestions: {str(e)}")
         return []
 
-# ✅ Waste pattern analysis
+#  Waste pattern analysis
 def analyze_food_waste_patterns(food_items):
     try:
         model = get_gemini_model()
@@ -136,7 +136,7 @@ def analyze_food_waste_patterns(food_items):
         st.error(f"Error analyzing waste patterns: {str(e)}")
         return {}
 
-# ✅ Generate shopping list
+#  Generate shopping list
 def generate_shopping_list(current_items, preferences=None):
     try:
         model = get_gemini_model()
@@ -162,7 +162,7 @@ def generate_shopping_list(current_items, preferences=None):
         st.error(f"Error generating shopping list: {str(e)}")
         return []
 
-# ✅ Detect duplicates
+#  Detect duplicates
 def detect_duplicate_purchases(new_items, existing_items):
     try:
         model = get_gemini_model()
