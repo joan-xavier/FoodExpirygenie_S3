@@ -15,7 +15,7 @@ def get_gemini_model():
     if not api_key:
         raise ValueError("GEMINI_API_KEY not found")
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-pro-vision")
+    return genai.GenerativeModel("gemini-1.5-pro")
 
 def process_voice_input(voice_text):
     """Process voice input using Gemini AI to extract food items"""
