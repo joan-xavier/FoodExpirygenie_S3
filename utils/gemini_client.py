@@ -6,48 +6,41 @@ import google.generativeai as genai
 from google.generativeai import types
 import streamlit as st
 
-# ✅ Fixed: Initialize Gemini client properly using configure()
-def get_gemini_client():
-    """Configure Gemini API client with API key"""
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+# ✅ Fixed: Initialize Gemini model properly
+def get_gemini_model(model_name="gemini-2.5-flash"):
+    """Get configured Gemini model"""
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise ValueError("GEMINI_API_KEY not found")
     genai.configure(api_key=api_key)
-    return genai  # Return the module as client-compatible
+    return genai.GenerativeModel(model_name)
 
 def process_voice_input(voice_text):
     try:
-        client = get_gemini_client()
+        model = get_gemini_model()
 
-        system_prompt = """
+        system_prompt = f"""
         You are a food inventory assistant. Extract food items from the user's voice input.
-
-        The user might say things like:
-        - "I bought chicken, milk, and bananas today"
-        - "Add 2 pounds of ground beef expiring next Friday"
-        - "I have yogurt, bread, and some apples"
 
         Extract each food item and provide the following information:
         - name
         - quantity
         - category
-        - purchase_date (YYYY-MM-DD)
-        - expiry_date (YYYY-MM-DD)
+        - purchase_date: today's date (YYYY-MM-DD)
+        - expiry_date: based on typical shelf life (YYYY-MM-DD)
 
-        Return the result as a JSON array of objects. If no food items are found, return an empty array.
+        Return result as a JSON array of objects.
+        Current date: {datetime.now().strftime('%Y-%m-%d')}
+        """
 
-        Current date: {current_date}
-        """.format(current_date=datetime.now().strftime('%Y-%m-%d'))
-
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=[
                 types.Content(role="user", parts=[types.Part(text=voice_text)])
             ],
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
+            generation_config=types.GenerationConfig(
                 response_mime_type="application/json"
-            )
+            ),
+            system_instruction=system_prompt
         )
 
         if response.text:
@@ -56,53 +49,45 @@ def process_voice_input(voice_text):
 
         return []
 
-    except ValueError:
-        st.error("Please check your Gemini API key configuration.")
-        return []
     except Exception as e:
         st.error(f"Error processing voice input: {str(e)}")
         return []
 
 def process_image_input(image_file, image_type):
     try:
-        client = get_gemini_client()
+        model = get_gemini_model()
+
         image_file.seek(0)
         image_bytes = image_file.read()
         image_file.seek(0)
 
         if image_type == "receipt":
-            prompt = """
-            Analyze this receipt/bill image and extract all food items.
-            Provide: name, quantity, category, purchase_date, expiry_date.
-            Return as JSON array.
-            Current date: {current_date}
-            """.format(current_date=datetime.now().strftime('%Y-%m-%d'))
+            prompt = f"""
+            Extract food items from this receipt. Return JSON array with:
+            - name, quantity, category, purchase_date, expiry_date.
+            Current date: {datetime.now().strftime('%Y-%m-%d')}
+            """
         elif image_type == "barcode":
-            prompt = """
-            Analyze this barcode image and identify the food product.
-            Return as JSON array with name, quantity, category, purchase_date, expiry_date.
-            Current date: {current_date}
-            """.format(current_date=datetime.now().strftime('%Y-%m-%d'))
+            prompt = f"""
+            Identify product in this barcode. Return JSON with:
+            - name, quantity, category, purchase_date, expiry_date.
+            Current date: {datetime.now().strftime('%Y-%m-%d')}
+            """
         else:
-            prompt = """
-            Analyze this food photo and identify visible food items.
-            Return as JSON array with name, quantity, category, purchase_date, expiry_date.
-            Current date: {current_date}
-            """.format(current_date=datetime.now().strftime('%Y-%m-%d'))
+            prompt = f"""
+            Identify food items in this photo. Return JSON array with:
+            - name, quantity, category, purchase_date, expiry_date.
+            Current date: {datetime.now().strftime('%Y-%m-%d')}
+            """
 
-        mime_type = "image/jpeg"
-        if hasattr(image_file, 'type') and image_file.type:
-            mime_type = image_file.type
-        elif len(image_bytes) >= 4 and image_bytes[:4] == b'\x89PNG':
-            mime_type = "image/png"
+        mime_type = image_file.type if hasattr(image_file, 'type') and image_file.type else "image/jpeg"
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                prompt
+                types.Part(text=prompt)
             ],
-            config=types.GenerateContentConfig(response_mime_type="application/json")
+            generation_config=types.GenerationConfig(response_mime_type="application/json")
         )
 
         if response.text:
@@ -111,9 +96,6 @@ def process_image_input(image_file, image_type):
 
         return []
 
-    except ValueError:
-        st.error("Please check your Gemini API key configuration.")
-        return []
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
         return []
@@ -123,18 +105,17 @@ def get_recipe_suggestions(expiring_items):
         return []
 
     try:
-        client = get_gemini_client()
+        model = get_gemini_model()
         items_text = ", ".join([item['name'] for item in expiring_items])
 
         prompt = f"""
-        Suggest 3-5 easy recipes using expiring items: {items_text}.
+        Suggest 3-5 easy recipes using these expiring ingredients: {items_text}
         Return JSON array with: name, ingredients, prep_time, instructions, difficulty.
         """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
+            generation_config=types.GenerationConfig(response_mime_type="application/json")
         )
 
         if response.text:
@@ -149,7 +130,7 @@ def get_recipe_suggestions(expiring_items):
 
 def analyze_food_waste_patterns(food_items):
     try:
-        client = get_gemini_client()
+        model = get_gemini_model()
         today = datetime.now().date()
 
         items_data = []
@@ -165,15 +146,19 @@ def analyze_food_waste_patterns(food_items):
             })
 
         prompt = f"""
-        Analyze this inventory for food waste risks:
+        Analyze food waste patterns from this data:
         {json.dumps(items_data, indent=2)}
-        Return JSON with: patterns, risk_categories, tips, recommendations.
+
+        Return a JSON object with keys:
+        - patterns
+        - recommendations
+        - risk_categories
+        - tips
         """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
+            generation_config=types.GenerationConfig(response_mime_type="application/json")
         )
 
         if response.text:
@@ -187,22 +172,25 @@ def analyze_food_waste_patterns(food_items):
 
 def generate_shopping_list(current_items, preferences=None):
     try:
-        client = get_gemini_client()
+        model = get_gemini_model()
         current_items_text = json.dumps([
             {'name': item['name'], 'category': item['category'], 'expiry_date': item['expiry_date']}
             for item in current_items
         ], indent=2)
 
         prompt = f"""
-        Based on this inventory:
+        Given this inventory:
         {current_items_text}
-        Generate a smart shopping list (JSON): item, category, priority, reason.
+        Generate a shopping list. Return JSON array with:
+        - item
+        - category
+        - priority (High/Medium/Low)
+        - reason
         """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
+            generation_config=types.GenerationConfig(response_mime_type="application/json")
         )
 
         if response.text:
@@ -217,27 +205,29 @@ def generate_shopping_list(current_items, preferences=None):
 
 def detect_duplicate_purchases(new_items, existing_items):
     try:
-        client = get_gemini_client()
-
-        new_items_text = json.dumps(new_items, indent=2)
-        existing_items_text = json.dumps(existing_items, indent=2)
+        model = get_gemini_model()
+        new_text = json.dumps(new_items, indent=2)
+        existing_text = json.dumps(existing_items, indent=2)
 
         prompt = f"""
-        Check for duplicate purchases between:
-        New items: {new_items_text}
-        Existing inventory: {existing_items_text}
-        Return JSON with duplicates and recommendations.
+        Detect duplicates between new items and existing inventory.
+        New:
+        {new_text}
+        Existing:
+        {existing_text}
+
+        Return JSON with:
+        - duplicates
+        - recommendations
         """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
+        response = model.generate_content(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json")
+            generation_config=types.GenerationConfig(response_mime_type="application/json")
         )
 
         if response.text:
-            analysis = json.loads(response.text)
-            return analysis
+            return json.loads(response.text)
 
         return {'duplicates': [], 'recommendations': []}
 
