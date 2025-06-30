@@ -30,20 +30,23 @@ def process_voice_input(voice_text):
     try:
         model = get_gemini_model()
         system_prompt = f"""
-        You are a food inventory assistant.Extract food items from user voice input. For each item, return:
+        You are a food inventory assistant. Extract food items from user voice input. 
+        For each item, return:
         - name, quantity, category, purchase_date, expiry_date
-           The user might say things like:
+
+        The user might say things like:
         - "I bought chicken, milk, and bananas today"
         - "Add 2 pounds of ground beef expiring next Friday"
         - "I have yogurt, bread, and some apples"
-        
+
         Extract each food item and provide the following information:
         - name: The food item name
         - quantity: How much (e.g., "2 pounds", "1 gallon", "6 pack")
         - category: One of [Grocery, Cooked Food, Pantry, Frozen, Dairy, Meat & Poultry, Fruits, Vegetables, Beverages, Snacks, Condiments, Bakery]
         - purchase_date: Today's date unless otherwise specified (YYYY-MM-DD format)
         - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format)
-        Respond as a JSON array.If no food items are found, return an empty array.
+
+        Respond as a JSON array. If no food items are found, return an empty array.
         Current date: {datetime.now().strftime('%Y-%m-%d')}
         """
 
@@ -61,7 +64,6 @@ def process_voice_input(voice_text):
         return []
 
 def process_image_input(image_file, image_type):
-    """Process image input using Gemini AI to extract food items"""
     try:
         model = get_gemini_model()
         image_file.seek(0)
@@ -71,23 +73,36 @@ def process_image_input(image_file, image_type):
         mime_type = image_file.type if hasattr(image_file, 'type') and image_file.type else "image/jpeg"
 
         if image_type == "receipt":
-            prompt = "Analyze this receipt/bill image and extract all food items.
-            
+            prompt = """
+            Analyze this receipt/bill image and extract all food items.
+
             For each food item found, provide:
             - name: The food item name as it appears
             - quantity: The quantity purchased
             - category: Categorize as one of [Grocery, Dairy, Meat & Poultry, Fruits, Vegetables, Beverages, Snacks, Condiments, Bakery, Pantry, Frozen]
             - purchase_date: Today's date (YYYY-MM-DD format)
-            - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format) Return JSON array."
+            - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format)
+
+            Return JSON array.
+            """
         elif image_type == "barcode":
-            prompt = "Identify the food product in this barcode. Return JSON array.If no food items found, return empty array"
+            prompt = """
+            Identify the food product in this barcode. 
+            Return JSON array. If no food items found, return empty array.
+            """
         else:
-            prompt = "Identify all visible food items in this photo. For each food item found, provide:
+            prompt = """
+            Identify all visible food items in this photo.
+
+            For each food item found, provide:
             - name: The food item name as it appears
             - quantity: The quantity purchased
             - category: Categorize as one of [Grocery, Dairy, Meat & Poultry, Fruits, Vegetables, Beverages, Snacks, Condiments, Bakery, Pantry, Frozen]
             - purchase_date: Today's date (YYYY-MM-DD format)
-            - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format) Return JSON array."
+            - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format)
+
+            Return JSON array.
+            """
 
         response = model.generate_content(
             contents=[
@@ -113,7 +128,7 @@ def get_recipe_suggestions(expiring_items):
         items_text = ", ".join([item['name'] for item in expiring_items])
 
         prompt = f"""
-        Suggest 3-5 recipes using: {items_text}.
+        Suggest 3–5 recipes using the following items: {items_text}.
         Each recipe should include:
         - name, ingredients, prep_time, instructions, difficulty
         Return as a JSON array.
