@@ -88,6 +88,13 @@ def process_image_input(image_file, image_type):
         elif image_type == "barcode":
             prompt = """
             Identify the food product in this barcode. 
+
+            For the food item found, provide:
+            - name: The food item name as it appears
+            - quantity: The quantity purchased
+            - category: Categorize as one of [Grocery, Dairy, Meat & Poultry, Fruits, Vegetables, Beverages, Snacks, Condiments, Bakery, Pantry, Frozen]
+            - purchase_date: Today's date (YYYY-MM-DD format)
+            - expiry_date: Estimated expiry date based on typical shelf life (YYYY-MM-DD format)
             Return JSON array. If no food items found, return empty array.
             """
         else:
@@ -170,7 +177,7 @@ def analyze_food_waste_patterns(food_items):
         Analyze the following inventory for waste patterns:
         {json.dumps(items_data, indent=2)}
         Return JSON object with:
-        - patterns, risk_categories, tips, recommendations
+        - category_level patterns, item_level Analysis, risk_categories, Shopping/storage/consumption tips, recommendations
         """
 
         response = model.generate_content(
