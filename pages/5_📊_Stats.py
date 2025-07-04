@@ -20,6 +20,50 @@ def check_authentication():
 def main():
     check_authentication()
     
+    # Apply theme from session state
+    current_theme = st.session_state.get('app_theme', 'Light')
+    if current_theme == "Elegant":
+        st.markdown("""
+        <style>
+        .stApp {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFE4E1 100%);
+            color: #1f2937;
+        }
+        .stSelectbox, .stTextInput, .stTextArea {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #1f2937;
+            border: 2px solid #FFB6C1;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.2);
+        }
+        .stSelectbox:focus, .stTextInput:focus, .stTextArea:focus {
+            border-color: #FF69B4;
+            box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.3);
+        }
+        .stButton > button {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4);
+            transition: all 0.3s ease;
+        }
+        .stButton > button:hover {
+            background: linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%);
+            box-shadow: 0 6px 20px rgba(255, 182, 193, 0.5);
+            transform: translateY(-2px);
+        }
+        .stMetric {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 182, 193, 0.1) 100%);
+            border-radius: 16px;
+            padding: 16px;
+            border: 2px solid #FFB6C1;
+            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.2);
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    
     st.markdown("# 📊 ExpiryGenie Statistics")
     st.markdown(f"### Data insights for **{st.session_state.current_user}**")
     

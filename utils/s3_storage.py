@@ -14,16 +14,25 @@ from botocore.exceptions import ClientError, NoCredentialsError
 import io
 from dotenv import load_dotenv
 load_dotenv()
+<<<<<<< HEAD
+=======
+import boto3
+>>>>>>> 981fa0f... Update app features
 
 class S3Storage:
     def __init__(self):
         """Initialize S3 client with credentials from environment"""
         try:
+            
             self.s3_client = boto3.client(
                 's3',
                 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+<<<<<<< HEAD
                 region_name=os.getenv('AWS_REGION', 'us-east-2')
+=======
+                region_name=os.getenv('AWS_REGION', 'us-east-2')                
+>>>>>>> 981fa0f... Update app features
             )
             self.bucket_name = os.getenv('S3_BUCKET_NAME', 'expirygenie-data')
         except Exception as e:
@@ -283,6 +292,23 @@ class S3Storage:
             print(f"Error updating food item date: {e}")
             return False
 
+    def update_user_password(self, email: str, new_password: str) -> bool:
+        """Update user password"""
+        try:
+            users_data = self.load_users()
+            
+            if email not in users_data:
+                return False
+            
+            # Update password hash
+            users_data[email]['password_hash'] = self.hash_password(new_password)
+            users_data[email]['updated_at'] = datetime.now().isoformat()
+            
+            return self.save_users(users_data)
+        except Exception as e:
+            print(f"Error updating user password: {e}")
+            return False
+
     def update_user_money_saved(self, user_email: str, amount: float) -> bool:
         """Update user's money saved"""
         try:
@@ -369,6 +395,9 @@ def authenticate_user(email: str, password: str) -> Optional[Dict]:
 def get_user_by_email(email: str) -> Optional[Dict]:
     return s3_storage.get_user_by_email(email)
 
+def update_user_password(email: str, new_password: str) -> bool:
+    return s3_storage.update_user_password(email, new_password)
+
 def add_food_item(user_email: str, name: str, category: str, purchase_date: str, 
                   expiry_date: str, quantity: str = '1 unit', opened: bool = False, 
                   added_method: str = 'manual') -> bool:
@@ -448,3 +477,61 @@ def get_default_expiry_prediction(food_name: str, purchase_date: date) -> str:
     
     predicted_date = purchase_date + timedelta(days=days_to_add)
     return predicted_date.strftime('%Y-%m-%d')
+<<<<<<< HEAD
+=======
+
+def get_household_food_items(household_id: str) -> list:
+    data = s3_storage._download_json(s3_storage._get_object_key('food_items', household_id))
+    return data.get('items', []) if data else []
+
+def save_household_food_items(household_id: str, food_items: list) -> bool:
+    food_data = {
+        'household_id': household_id,
+        'last_updated': datetime.now().isoformat(),
+        'items': food_items
+    }
+    return s3_storage._upload_json(food_data, s3_storage._get_object_key('food_items', household_id))
+
+def add_household_food_item(household_id: str, name: str, category: str, purchase_date: str, expiry_date: str, quantity: str = '1 unit', opened: bool = False, added_method: str = 'manual') -> bool:
+    food_items = get_household_food_items(household_id)
+    new_id = max([item.get('id', 0) for item in food_items], default=0) + 1
+    new_item = {
+        'id': new_id,
+        'name': name,
+        'category': category,
+        'purchase_date': purchase_date,
+        'expiry_date': expiry_date,
+        'quantity': quantity,
+        'opened': opened,
+        'added_method': added_method,
+        'created_at': datetime.now().isoformat()
+    }
+    food_items.append(new_item)
+    return save_household_food_items(household_id, food_items)
+
+def delete_household_food_item(household_id: str, item_id: int) -> bool:
+    food_items = get_household_food_items(household_id)
+    food_items = [item for item in food_items if item.get('id') != item_id]
+    return save_household_food_items(household_id, food_items)
+
+def update_household_food_item_details(household_id: str, item_id: int, name: str, quantity: str, opened: bool) -> bool:
+    food_items = get_household_food_items(household_id)
+    for item in food_items:
+        if item.get('id') == item_id:
+            item['name'] = name
+            item['quantity'] = quantity
+            item['opened'] = opened
+            item['updated_at'] = datetime.now().isoformat()
+            break
+    return save_household_food_items(household_id, food_items)
+
+def update_household_food_item_date(household_id: str, item_id: int, date_type: str, new_date: date) -> bool:
+    food_items = get_household_food_items(household_id)
+    for item in food_items:
+        if item.get('id') == item_id:
+            if date_type in ['purchase_date', 'expiry_date']:
+                item[date_type] = new_date.strftime('%Y-%m-%d')
+                item['updated_at'] = datetime.now().isoformat()
+            break
+    return save_household_food_items(household_id, food_items)
+>>>>>>> 981fa0f... Update app features
