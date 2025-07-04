@@ -28,11 +28,7 @@ class S3Storage:
                 's3',
                 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-<<<<<<< HEAD
-                region_name=os.getenv('AWS_REGION', 'us-east-2')
-=======
                 region_name=os.getenv('AWS_REGION', 'us-east-2')                
->>>>>>> 981fa0f... Update app features
             )
             self.bucket_name = os.getenv('S3_BUCKET_NAME', 'expirygenie-data')
         except Exception as e:
@@ -477,8 +473,6 @@ def get_default_expiry_prediction(food_name: str, purchase_date: date) -> str:
     
     predicted_date = purchase_date + timedelta(days=days_to_add)
     return predicted_date.strftime('%Y-%m-%d')
-<<<<<<< HEAD
-=======
 
 def get_household_food_items(household_id: str) -> list:
     data = s3_storage._download_json(s3_storage._get_object_key('food_items', household_id))
@@ -533,5 +527,4 @@ def update_household_food_item_date(household_id: str, item_id: int, date_type: 
                 item[date_type] = new_date.strftime('%Y-%m-%d')
                 item['updated_at'] = datetime.now().isoformat()
             break
-    return save_household_food_items(household_id, food_items)
->>>>>>> 981fa0f... Update app features
+
